@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  api:
+  catalogo_api:
     build: ./services/catalogo
     ports:
       - "3000:3000"
@@ -10,6 +10,19 @@ services:
       DB_USER: loja
       DB_PASSWORD: 12345
       DB_NAME: lojadecartas
+    depends_on:
+      - db
+
+  usuarios_api:
+    build: ./services/usuarios
+    ports:
+      - "3001:3000"
+    environment:
+      DB_HOST: db
+      DB_USER: loja
+      DB_PASSWORD: 12345
+      DB_NAME: lojadecartas
+      JWT_SECRET: "secret"
     depends_on:
       - db
 
