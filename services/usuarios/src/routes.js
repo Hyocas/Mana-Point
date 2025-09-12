@@ -49,7 +49,7 @@ router.post('/usuarios/login', async (req, res) => {
             return res.status(401).json({ message: "Credenciais inválidas."});
         }
 
-        const senhaValida = await bcrypt.compare(senha, senhaHash);
+        const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
 
         if (!senhaValida) {
             return res.status(401).json({ message: "Credenciais inválidas."});
