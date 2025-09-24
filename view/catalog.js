@@ -1,14 +1,11 @@
-// catalog.js (versão atualizada)
 document.addEventListener('DOMContentLoaded', () => {
     const headerNav = document.getElementById('header-nav');
     const catalogContainer = document.getElementById('catalog-container');
     const catalogApiUrl = 'http://localhost:3000/api';
 
-    // Verifica se existe um token no "baú"
     const token = localStorage.getItem('authToken');
 
     if (token) {
-        // Se o usuário ESTÁ logado, mostra o botão de Logout
         const logoutBtn = document.createElement('button');
         logoutBtn.id = 'logout-btn';
         logoutBtn.textContent = 'Logout';
@@ -18,18 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         headerNav.appendChild(logoutBtn);
     } else {
-        // Se o usuário NÃO ESTÁ logado, mostra o link de Voltar
         const backLink = document.createElement('a');
         backLink.href = 'index.html';
         backLink.textContent = 'Voltar para Login';
-        backLink.className = 'nav-link'; // Usaremos essa classe para estilizar
+        backLink.className = 'nav-link';
         headerNav.appendChild(backLink);
     }
 
-    // Função para buscar e mostrar o catálogo (continua a mesma)
     const fetchCatalog = async () => {
         try {
-            const response = await fetch(`${catalogApiUrl}/cartas`);
+            const response = await fetch('/api/catalogo/cartas');
             if (!response.ok) throw new Error('Não foi possível carregar o catálogo.');
             
             const cartas = await response.json();
@@ -50,6 +45,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="price">R$ ${carta.preco}</p>
                 `;
                 catalogContainer.appendChild(cardElement);
+                    const token = localStorage.getItem('authToken');
+                if (token) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Deletar';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = async () => {
+                        if (confirm(`Tem certeza que deseja deletar a carta "${carta.nome}"?`)) {
+                            try {
+                                const response = await fetch(`/api/catalogo/cartas/${carta.id}`, {
+                                    method: 'DELETE',
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                if (!response.ok) throw new Error('Falha ao deletar a carta.');
+
+                                fetchCatalog();
+                            } catch (error) {
+                                alert(error.message);
+                            }
+                        }
+                    };
+                    cardElement.appendChild(deleteBtn);
+                }
             });
         } catch (error) {
             catalogContainer.innerHTML = `<p class="error">${error.message}</p>`;

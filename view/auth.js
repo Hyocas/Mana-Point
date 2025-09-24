@@ -1,4 +1,3 @@
-// auth.js
 document.addEventListener('DOMContentLoaded', () => {
     const usersApiUrl = 'http://localhost:3001/api';
     const messageArea = document.getElementById('message-area');
@@ -6,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
-    // LÓGICA DE LOGIN
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LÓGICA DE CADASTRO
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -53,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageArea.className = 'message-area success';
                 
                 setTimeout(() => {
-                    window.location.href = 'index.html'; // Redireciona para a nova página de login
+                    window.location.href = 'index.html';
                 }, 2000);
             } catch (error) {
                 messageArea.textContent = error.message;

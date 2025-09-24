@@ -70,4 +70,24 @@ router.post('/usuarios/login', async (req, res) => {
     
 })
 
+router.post('/usuarios/validar-token', (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ valido: false });
+
+    console.log('[usuarios_api] Requisição de validação recebida com o corpo (body):', req.body);
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('[usuarios_api] Token verificado com sucesso!');
+        res.status(200).json({ valido: true, usuario: decoded });
+    } catch (error) {
+        console.error('[usuarios_api] ERRO na verificação do JWT:', error.message);
+        res.status(401).json({ valido: false, message: 'Token inválido.' });
+    }
+})
+
+console.log('--- CHAVE SECRETA CARREGADA ---');
+console.log('Valor de JWT_SECRET:', process.env.JWT_SECRET);
+console.log('-----------------------------');
+
 module.exports = router;
