@@ -3,17 +3,23 @@ body {
     background-color: #1e1e1e;
     color: #d4d4d4;
     margin: 0;
-    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#root {
+    width: 100%;
 }
 
 .container {
     width: 100%;
     max-width: 400px;
     text-align: center;
+    margin: 0 auto;
 }
 
 .auth-card, .catalog-page {
@@ -23,8 +29,9 @@ body {
     box-shadow: 0 8px 16px rgba(0,0,0,0.4);
 }
 
-h1, h2 {
+h1 {
     color: #ffffff;
+    margin-top: 0;
 }
 
 .form-group {
@@ -47,6 +54,7 @@ input[type="password"] {
     border: 1px solid #444;
     background-color: #3c3c3c;
     color: #d4d4d4;
+    font-size: 16px;
 }
 
 button {
@@ -60,6 +68,7 @@ button {
     font-weight: bold;
     font-size: 16px;
     transition: background-color 0.2s;
+    margin-top: 10px;
 }
 
 button:hover {
@@ -79,17 +88,19 @@ button:hover {
     margin-top: 20px;
 }
 
-.switch-link a {
+a {
     color: #0098ff;
     text-decoration: none;
 }
 
-.switch-link a:hover {
+a:hover {
     text-decoration: underline;
 }
 
+/* Estilos da pag do catalogo */
 .catalog-page {
     max-width: 1200px;
+    margin: 0 auto;
 }
 
 .catalog-header {
@@ -103,27 +114,19 @@ button:hover {
     width: auto;
     padding: 10px 20px;
     background-color: #c43535;
+    margin-top: 0;
 }
 #logout-btn:hover {
     background-color: #a02b2b;
 }
 
-#catalog-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+.delete-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-top: 10px;
+    background-color: #8b2b2b;
 }
-
-.card {
-    border: 1px solid #444;
-    padding: 15px;
-    border-radius: 5px;
-    background-color: #3c3c3c;
-    text-align: left;
-}
-
-.card h3 { margin-top: 0; }
-.card .price { font-weight: bold; color: #3dc952; text-align: right; }
 
 .nav-link {
     display: inline-block;
@@ -138,4 +141,29 @@ button:hover {
 }
 .nav-link:hover {
     background-color: #005a9e;
+}
+
+.catalog-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    border: 1px solid #444;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #3c3c3c;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+.card h3 { margin-top: 0; }
+.price { 
+    font-weight: bold; 
+    color: #3dc952; 
+    text-align: right; 
+    margin-top: auto; /* Empurra o preco para o final do card */
+    padding-top: 1rem;
 }
