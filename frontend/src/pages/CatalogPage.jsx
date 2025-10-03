@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function CatalogPage() {
+    // Estados para gerenciar a lista de cartas, loading, erros e o campo de input
     const [cartas, setCartas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [newCardName, setNewCardName] = useState('');
+    const [cardNameToAdd, setCardNameToAdd] = useState('');
 
     const navigate = useNavigate();
     const catalogApiUrl = 'http://localhost:3000/api';
+
+    // Lê o token do localStorage para saber o status de login do usuário
     const token = localStorage.getItem('authToken');
 
+    // Função para buscar o catálogo (reutilizável)
     const fetchCatalog = async () => {
         try {
+            setLoading(true);
             const response = await fetch(`${catalogApiUrl}/cartas`);
             if (!response.ok) throw new Error('Falha ao buscar dados do catálogo.');
             const data = await response.json();
@@ -24,38 +29,37 @@ export default function CatalogPage() {
         }
     };
     
+    // Roda a busca pelo catálogo assim que a página carrega
     useEffect(() => {
         fetchCatalog();
-    }, []); // O array vazio [] garante que rode so uma vez
+    }, []);
 
+    // Função para deslogar
     const handleLogout = () => {
         localStorage.removeItem('authToken');
-        navigate('/'); 
+        navigate('/'); // Redireciona para a página de login
     };
 
+    // Função para adicionar uma nova carta
     const handleAddCard = async (e) => {
         e.preventDefault();
-        if (!newCardName.trim()) return;
+        if (!cardNameToAdd.trim()) return;
 
         try {
-            // Nota: O backend esta espera o objeto completo, mando apenas o nome por enquanto
-            // Para funcionar 100%, o backend POST /cartas precisa ser ajustado ***
             const response = await fetch(`${catalogApiUrl}/cartas`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}` // Envia o token para autenticação
                 },
-                body: JSON.stringify({ nome: newCardName, preco: 0 }) 
+                body: JSON.stringify({ nome: cardNameToAdd })
             });
             
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || "Erro ao adicionar carta");
-            }
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Erro ao adicionar carta");
 
-            setNewCardName('');
-            fetchCatalog(); 
+            setCardNameToAdd(''); // Limpa o campo de input
+            fetchCatalog(); // Atualiza a lista de cartas na tela
         } catch (err) {
             alert(err.message);
         }
@@ -68,10 +72,14 @@ export default function CatalogPage() {
         try {
             const response = await fetch(`${catalogApiUrl}/cartas/${cardId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${token}` } // Envia o token
             });
-            if (!response.ok) throw new Error('Falha ao deletar a carta.');
-            fetchCatalog();
+
+            if (response.status !== 204) { // DELETE retorna 204 No Content
+                 const data = await response.json();
+                 throw new Error(data.message || 'Falha ao deletar a carta.');
+            }
+            fetchCatalog(); // Atualiza a lista
         } catch (err) {
             alert(err.message);
         }
@@ -86,25 +94,26 @@ export default function CatalogPage() {
             <div className="catalog-header">
                 <h2>Catálogo de Cartas</h2>
                 <div id="header-nav">
+                    {/* Mostra o botão de Logout se logado, ou o link de Login se não estiver */}
                     {token ? (
                         <button id="logout-btn" onClick={handleLogout}>Logout</button>
                     ) : (
-                        <Link to="/" className="nav-link">Voltar para Login</Link>
+                        <Link to="/" className="nav-link">Fazer Login</Link>
                     )}
                 </div>
             </div>
 
-            {/* Formulário de Adicionar Carta (só aparece se estiver logado) */}
+            {/* Formulário de Adicionar Carta (só aparece se o usuário estiver logado) */}
             {token && (
-                <form id="add-card-form" onSubmit={handleAddCard} style={{ marginBottom: '20px' }}>
+                <form id="add-card-form" onSubmit={handleAddCard} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                     <input 
                         type="text" 
-                        id="nomeCarta" 
-                        placeholder="Nome da nova carta"
-                        value={newCardName}
-                        onChange={(e) => setNewCardName(e.target.value)}
+                        style={{ flexGrow: 1 }}
+                        placeholder="Buscar e adicionar carta pelo nome exato..."
+                        value={cardNameToAdd}
+                        onChange={(e) => setCardNameToAdd(e.target.value)}
                     />
-                    <button id="addCardBtn" type="submit">Adicionar Carta</button>
+                    <button style={{ width: 'auto' }} type="submit">Adicionar</button>
                 </form>
             )}
 

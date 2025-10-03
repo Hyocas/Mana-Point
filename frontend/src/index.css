@@ -71,6 +71,18 @@ button {
     margin-top: 10px;
 }
 
+.delete-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-top: 10px;
+    background-color: #8b2b2b;
+    align-self: flex-end; /* Alinha o botão à direita */
+}
+.delete-btn:hover {
+    background-color: #6a2121;
+}
+
 button:hover {
     background-color: #005a9e;
 }
