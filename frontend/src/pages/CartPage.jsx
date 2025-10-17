@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function CartPage() {
-    // Estados para gerenciar a página
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -11,7 +10,6 @@ export default function CartPage() {
     const cartApiUrl = 'http://localhost:3002/api';
     const catalogApiUrl = 'http://localhost:3000/api';
 
-    // Usamos useCallback para que a função não seja recriada a cada renderização
     const fetchCart = useCallback(async () => {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -19,29 +17,25 @@ export default function CartPage() {
             return;
         }
 
-        // Decodifica o token para pegar o ID do usuário
         const userId = JSON.parse(atob(token.split('.')[1])).id;
         
         try {
             setLoading(true);
             setError(null);
 
-            // 1. Busca os itens brutos do carrinho
             const cartResponse = await fetch(`${cartApiUrl}/carrinho/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!cartResponse.ok) throw new Error('Falha ao buscar itens do carrinho.');
             const cartData = await cartResponse.json();
 
-            // 2. "Enriquece" os itens com os detalhes das cartas do serviço de catálogo
             const enrichedItems = await Promise.all(
                 cartData.map(async (item) => {
                     const productResponse = await fetch(`${catalogApiUrl}/cartas/${item.produto_id}`);
                     const productData = await productResponse.json();
-                    return { ...item, ...productData }; // Combina os dados do item com os dados do produto
+                    return { ...item, ...productData };
                 })
             );
-
             setCartItems(enrichedItems);
         } catch (err) {
             setError(err.message);
@@ -50,16 +44,14 @@ export default function CartPage() {
         }
     }, [navigate]);
 
-    // Busca o carrinho quando a página carrega
     useEffect(() => {
         fetchCart();
     }, [fetchCart]);
 
-    // Função para atualizar a quantidade de um item
     const handleUpdateQuantity = async (itemId, newQuantity) => {
         const token = localStorage.getItem('authToken');
         if (newQuantity <= 0) {
-            handleRemoveItem(itemId); // Se a quantidade for 0 ou menos, remove o item
+            handleRemoveItem(itemId);
             return;
         }
         try {
@@ -71,13 +63,12 @@ export default function CartPage() {
                 },
                 body: JSON.stringify({ quantidade: newQuantity })
             });
-            fetchCart(); // Atualiza a visualização do carrinho
+            fetchCart();
         } catch (err) {
             alert('Erro ao atualizar a quantidade.');
         }
     };
 
-    // Função para remover um item do carrinho
     const handleRemoveItem = async (itemId) => {
         const token = localStorage.getItem('authToken');
         if (!confirm('Tem certeza que deseja remover este item?')) return;
@@ -86,13 +77,12 @@ export default function CartPage() {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            fetchCart(); // Atualiza a visualização do carrinho
+            fetchCart();
         } catch (err) {
             alert('Erro ao remover o item.');
         }
     };
     
-    // Calcula o total do carrinho
     const totalPrice = cartItems.reduce((total, item) => total + (item.quantidade * item.preco_unitario), 0);
 
     if (loading) return <p>Carregando carrinho...</p>;
