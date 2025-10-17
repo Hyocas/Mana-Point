@@ -47,6 +47,20 @@ services:
     depends_on:
       - db
 
+  carrinho_api:
+    build: ./services/carrinho
+    ports:
+      - "3002:3000"
+    environment:
+      DB_HOST: db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+    depends_on:
+      - db
+      - usuarios_api
+      - catalogo_api
+
   db:
     image: postgres:15
     ports:
