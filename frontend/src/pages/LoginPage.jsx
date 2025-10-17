@@ -36,6 +36,9 @@ export default function LoginPage() {
     return (
         <div className="container">
             <div className="auth-card">
+                <div className="logo-container">
+                    <img src="/logo-transparente.png" alt="Mana-Point Logo" className="logo-img" />
+                </div>
                 <h1>Login</h1>
                 <p className={`message-area ${error ? 'error' : ''}`}>{error}</p>
                 <form id="login-form" onSubmit={handleLogin}>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Link, useNavigate } from 'react-router-dom';
 
 export default function CatalogPage() {
     const [cartas, setCartas] = useState([]);
@@ -87,7 +86,8 @@ export default function CatalogPage() {
         <div className="catalog-page">
             <div className="catalog-header">
                 <h2>Catálogo de Cartas</h2>
-                <div id="header-nav">
+                <div id="header-nav" style={{ display: 'flex', gap: '10px' }}>
+                    <Link to="/carrinho" className="nav-link">Ver Carrinho</Link>
                     {token ? (
                         <button id="logout-btn" onClick={handleLogout}>Logout</button>
                     ) : (
