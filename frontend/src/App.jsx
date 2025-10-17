@@ -10,6 +10,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/catalog" element={<CatalogPage />} />
+        <Route path="/carta/:id" element={<CardDetailPage />} />
       </Routes>
     </BrowserRouter>
   );

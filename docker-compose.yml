@@ -24,6 +24,7 @@ services:
 
   catalogo_migrator:
     build: ./services/catalogo
+    profiles: ["tools"]
     environment:
       DB_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}

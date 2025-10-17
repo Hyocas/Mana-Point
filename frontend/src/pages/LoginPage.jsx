@@ -6,7 +6,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     
-    // Hook do React Router para navegar entre as pag
     const navigate = useNavigate();
     const usersApiUrl = 'http://localhost:3001/api';
 
@@ -26,7 +25,6 @@ export default function LoginPage() {
                 throw new Error(data.message || 'Erro ao tentar fazer login.');
             }
             
-            // Se o login der certo, salva o token e navega para o catalogo
             localStorage.setItem('authToken', data.token);
             navigate('/catalog');
 
