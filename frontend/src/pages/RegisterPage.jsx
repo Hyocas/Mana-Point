@@ -8,7 +8,7 @@ export default function RegisterPage() {
     const [success, setSuccess] = useState('');
 
     const navigate = useNavigate();
-    const usersApiUrl = 'http://localhost:3001/api';
+    const usersApiUrl = '/api/usuarios_proxy';
 
     const handleRegister = async (e) => {
         e.preventDefault();

@@ -1,5 +1,3 @@
-# Testando novamente
-
 services:
   # --- FRONTEND ---
   frontend:
@@ -7,6 +5,10 @@ services:
       context: ./frontend
     ports:
       - "8080:80"
+    depends_on:
+      - catalogo_api
+      - usuarios_api
+      - carrinho_api
 
   # --- BACKEND (APIs) ---
   catalogo_api:

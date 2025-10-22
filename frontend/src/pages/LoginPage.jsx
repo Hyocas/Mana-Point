@@ -7,7 +7,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     
     const navigate = useNavigate();
-    const usersApiUrl = 'http://localhost:3001/api';
+    const usersApiUrl = '/api/usuarios_proxy';
 
     const handleLogin = async (e) => {
         e.preventDefault();

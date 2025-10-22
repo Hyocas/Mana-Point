@@ -7,8 +7,8 @@ export default function CartPage() {
     const [error, setError] = useState(null);
 
     const navigate = useNavigate();
-    const cartApiUrl = 'http://localhost:3002/api';
-    const catalogApiUrl = 'http://localhost:3000/api';
+    const cartApiUrl = '/api/carrinho_proxy';
+    const catalogApiUrl = '/api/catalogo_proxy';
 
     const fetchCart = useCallback(async () => {
         const token = localStorage.getItem('authToken');

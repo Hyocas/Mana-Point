@@ -5,12 +5,12 @@ export default function CardDetailPage() {
     const [carta, setCarta] = useState(null);
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
-    const cartApiUrl = 'http://localhost:3002/api';
+    const cartApiUrl = '/api/carrinho_proxy';
 
     useEffect(() => {
         const fetchCard = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/cartas/${id}`);
+                const response = await fetch(`/api/catalogo_proxy/cartas/${id}`);
                 if (!response.ok) throw new Error('Carta não encontrada.');
                 const data = await response.json();
                 setCarta(data);

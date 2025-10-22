@@ -8,7 +8,7 @@ export default function CatalogPage() {
     const [cardNameToAdd, setCardNameToAdd] = useState('');
 
     const navigate = useNavigate();
-    const catalogApiUrl = 'http://localhost:3000/api';
+    const catalogApiUrl = '/api/catalogo_proxy';
 
     const token = localStorage.getItem('authToken');
 
