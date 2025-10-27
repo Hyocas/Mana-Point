@@ -72,15 +72,21 @@ router.post('/cartas', async (req, res) => {
         const efeito = carta.desc || null;
         const preco = carta.card_prices?.[0]?.cardmarket_price || 0;
 
+        //Extrair a URL da imagem
+        const imagemUrl = carta.card_images?.[0]?.image_url || null;
+
         const result = await db.query(
-            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco) 
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [nomeCarta, tipo, ataque, defesa, efeito, preco]
+            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl]
         );
 
         return res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('[catalogo_api] Erro ao adicionar carta:', error.message);
+        if (error.response) {
+            console.error('[catalogo_api] Detalhes do erro YGOProDeck:',  error.response.status, error.response.data);
+        }
         return res.status(500).json({ message: 'Erro interno ao adicionar carta.' });
     }
 });
