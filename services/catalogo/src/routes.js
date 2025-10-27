@@ -3,6 +3,59 @@ const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
 
+router.get('/cartas/search', async (req, res) => {
+    const nome = req.query.nome;
+
+    if (!nome || nome.trim() === '') {
+        return res.status(400).json({ message: 'O parâmetro "nome" é obrigatório.' });
+    }
+
+    try {
+        const result = await db.query(
+            'SELECT * FROM cartas WHERE nome ILIKE $1',
+            [`%${nome}%`]
+        );
+
+        if (result.rows.length > 0) {
+            return res.status(200).json(result.rows);
+        }
+
+        const apiRes = await axios.get(
+            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&language=pt`
+        );
+
+        if (!apiRes.data.data || apiRes.data.data.length === 0) {
+            return res.status(404).json({ message: 'Carta não encontrada na API YGOProDeck.' });
+        }
+
+        const carta = apiRes.data.data[0];
+
+        const nomeCarta = carta.name;
+        const tipo = carta.type || null;
+        const ataque = carta.atk || null;
+        const defesa = carta.def || null;
+        const efeito = carta.desc || null;
+        const preco = carta.card_prices?.[0]?.cardmarket_price * 5.37 || 0;
+        const imagemUrl = carta.card_images?.[0]?.image_url || null;
+        const quantidade = 0;
+
+        const insert = await db.query(
+            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             RETURNING *`,
+            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
+        );
+
+        return res.status(201).json(insert.rows);
+    } catch (error) {
+        console.error('[catalogo_api] Erro na rota /cartas/search:', error.message);
+        if (error.response) {
+            console.error('[YGOProDeck]', error.response.status, error.response.data);
+        }
+        return res.status(500).json({ message: 'Erro ao buscar carta.' });
+    }
+});
+
 router.get('/cartas', async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM cartas ORDER BY id ASC');
