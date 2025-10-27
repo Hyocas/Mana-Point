@@ -66,6 +66,8 @@ export default function CartPage() {
                         ataque: productData.ataque,
                         defesa: productData.defesa,
                         efeito: productData.efeito,
+                        estoque_disponivel: productData.quantidade ?? 0,
+                        imagem_url: productData.imagem_url || null,
                     };
                 })
             );
@@ -176,21 +178,55 @@ export default function CartPage() {
             ) : (
                 <div>
                     {cartItems.map(item => (
-                        <div key={item.cartItemId} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '1rem' }}>
-                            <div>
+                        <div 
+                            key={item.cartItemId} 
+                            className="card" 
+                            style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center', 
+                                marginBottom: '1rem', 
+                                padding: '1rem', 
+                                gap: '1rem' 
+                            }}
+                            >
+                            {item.imagem_url && (
+                                <img
+                                    src={item.imagem_url}
+                                    alt={item.nome}
+                                    style={{ width: '80px', height: 'auto', borderRadius: '8px' }}
+                                />
+                            )}
+                            <div style={{ flexGrow: 1 }}>
                                 <h3>{item.nome || `Produto ID: ${item.produto_id}`}</h3>
                                 <p><strong>Preço Unitário:</strong> R$ {Number(item.preco_unitario).toFixed(2)}</p>
                                 <p><strong>Subtotal:</strong> R$ {(item.quantidade * item.preco_unitario).toFixed(2)}</p>
+                                <p>
+                                    <strong>Estoque disponível:</strong>{' '}
+                                    <span style={{ color: item.estoque_disponivel > 0 ? 'green' : 'red' }}>
+                                    {item.estoque_disponivel > 0
+                                        ? `${item.estoque_disponivel} unidade${item.estoque_disponivel > 1 ? 's' : ''}`
+                                        : 'Sem estoque'}
+                                    </span>
+                                </p>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <label htmlFor={`qtd-${item.cartItemId}`}>Qtd:</label>
                                 <input
-                                    id={`qtd-${item.cartItemId}`}
-                                    type="number"
-                                    value={item.quantidade}
-                                    onChange={(e) => handleUpdateQuantity(item.cartItemId, parseInt(e.target.value) || 0)} // Garante que é um número
-                                    min="0"
-                                    style={{ width: '60px', textAlign: 'center' }}
+                                id={`qtd-${item.cartItemId}`}
+                                type="number"
+                                value={item.quantidade}
+                                onChange={(e) => {
+                                    const novaQtd = parseInt(e.target.value) || 0;
+                                    if (novaQtd <= (item.estoque_disponivel ?? Infinity)) {
+                                        handleUpdateQuantity(item.cartItemId, novaQtd);
+                                    } else {
+                                        alert(`Quantidade máxima disponível: ${item.estoque_disponivel}`);
+                                    }
+                                }}
+                                min="0"
+                                max={item.estoque_disponivel ?? undefined}
+                                style={{ width: '60px', textAlign: 'center' }}
                                 />
                                 <button
                                     className="delete-btn"

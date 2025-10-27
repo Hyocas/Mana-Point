@@ -50,7 +50,7 @@ router.post('/cartas', async (req, res) => {
         return res.status(401).json({ message: 'Acesso não autorizado. Token inválido.' });
     }
 
-    const { nome } = req.body;
+    const { nome, quantidade } = req.body;
     if (!nome) {
         return res.status(400).json({ message: 'O nome da carta é obrigatório.' });
     }
@@ -70,15 +70,15 @@ router.post('/cartas', async (req, res) => {
         const ataque = carta.atk || null;
         const defesa = carta.def || null;
         const efeito = carta.desc || null;
-        const preco = carta.card_prices?.[0]?.cardmarket_price || 0;
+        const preco = carta.card_prices?.[0]?.cardmarket_price*5.37 || 0;
 
         //Extrair a URL da imagem
         const imagemUrl = carta.card_images?.[0]?.image_url || null;
 
         const result = await db.query(
-            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl]
+            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
         );
 
         return res.status(201).json(result.rows[0]);

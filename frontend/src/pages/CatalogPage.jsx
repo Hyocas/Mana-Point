@@ -6,6 +6,7 @@ export default function CatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [cardNameToAdd, setCardNameToAdd] = useState('');
+    const [quantidadeToAdd, setQuantidadeToAdd] = useState(1);
 
     const navigate = useNavigate();
     const catalogApiUrl = '/api/catalogo_proxy';
@@ -46,7 +47,7 @@ export default function CatalogPage() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ nome: cardNameToAdd })
+                body: JSON.stringify({ nome: cardNameToAdd, quantidade: quantidadeToAdd })
             });
             
             const data = await response.json();
@@ -97,13 +98,25 @@ export default function CatalogPage() {
             </div>
 
             {token && (
-                <form id="add-card-form" onSubmit={handleAddCard} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <form 
+                    id="add-card-form" 
+                    onSubmit={handleAddCard} 
+                    style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}
+                >
                     <input 
                         type="text" 
                         style={{ flexGrow: 1 }}
                         placeholder="Buscar e adicionar carta pelo nome exato..."
                         value={cardNameToAdd}
                         onChange={(e) => setCardNameToAdd(e.target.value)}
+                    />
+                    <input
+                        type="number"
+                        min="1"
+                        value={quantidadeToAdd}
+                        onChange={(e) => setQuantidadeToAdd(Number(e.target.value))}
+                        style={{ width: '80px' }}
+                        placeholder="Qtd"
                     />
                     <button style={{ width: 'auto' }} type="submit">Adicionar</button>
                 </form>
@@ -124,7 +137,11 @@ export default function CatalogPage() {
                             <p><strong>Tipo:</strong> {carta.tipo || 'N/A'}</p>
                             <p><strong>Ataque/Defesa:</strong> {carta.ataque ?? 'N/A'}/${carta.defesa ?? 'N/A'}</p>
                             <p>{carta.efeito || 'Sem efeito especial.'}</p>
-                        <p className="price">R$ {carta.preco}</p>
+                        <p className="price">
+                        R$ {carta.preco} — <span style={{ color: carta.quantidade > 0 ? 'green' : 'red' }}>
+                            {carta.quantidade > 0 ? `${carta.quantidade} em estoque` : 'Sem estoque'}
+                        </span>
+                        </p>
                         {token && (
                             <button className="delete-btn" onClick={() => handleDeleteCard(carta.id, carta.nome)}>Deletar</button>
                         )}
