@@ -21,7 +21,7 @@ router.get('/cartas/search', async (req, res) => {
         }
 
         const apiRes = await axios.get(
-            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&language=pt`
+            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
         );
 
         if (!apiRes.data.data || apiRes.data.data.length === 0) {
@@ -110,7 +110,7 @@ router.post('/cartas', async (req, res) => {
 
     try {
         const apiRes = await axios.get(
-            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&language=pt`
+            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
         );
 
         if (!apiRes.data.data || apiRes.data.data.length === 0) {
