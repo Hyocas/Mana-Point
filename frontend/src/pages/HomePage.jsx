@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ProductCard from '../components/ProductCard'; 
 
-export default function CatalogPage() {
+export default function HomePage() {
     const [cartas, setCartas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -125,87 +126,45 @@ export default function CatalogPage() {
     if (error) return <p className="error">{error}</p>;
 
     return (
-        <div className="catalog-page">
-            <div className="catalog-header">
-                <h2>Catálogo de Cartas</h2>
-                <form 
-                id="search-card-form" 
-                onSubmit={handleSearch}
-                style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}
-                >
-                <input
-                    type="text"
-                    placeholder="Pesquisar carta..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ flexGrow: 1 }}
-                />
-                <button type="submit" disabled={searching}>
-                    {searching ? 'Buscando...' : 'Buscar'}
-                </button>
-                </form>
-                <div id="header-nav" style={{ display: 'flex', gap: '10px' }}>
-                    <Link to="/carrinho" className="nav-link">Ver Carrinho</Link>
-                    {token ? (
-                        <button id="logout-btn" onClick={handleLogout}>Logout</button>
-                    ) : (
-                        <Link to="/" className="nav-link">Fazer Login</Link>
-                    )}
-                </div>
-            </div>
-
+        <div className="homepage-content">
             {token && (
                 <form 
                     id="add-card-form" 
                     onSubmit={handleAddCard} 
-                    style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}
-                >
+                    className="add-card-form-style-b">
                     <input 
                         type="text" 
-                        style={{ flexGrow: 1 }}
-                        placeholder="Buscar e adicionar carta pelo nome exato..."
+                        placeholder="Nome exato da carta (API YGOPro)"
                         value={cardNameToAdd}
                         onChange={(e) => setCardNameToAdd(e.target.value)}
+                        required
                     />
                     <input
                         type="number"
-                        min="1"
+                        min="0"
                         value={quantidadeToAdd}
                         onChange={(e) => setQuantidadeToAdd(Number(e.target.value))}
-                        style={{ width: '80px' }}
+                        required
                         placeholder="Qtd"
+                        style={{ width: '80px', textAlign: 'center' }}
                     />
-                    <button style={{ width: 'auto' }} type="submit">Adicionar</button>
+                    <button type="submit">Adicionar Carta</button>
                 </form>
             )}
-
-            <div id="catalog-container">
-                {cartas.map(carta => (
-                    <Link to={`/carta/${carta.id}`} key={carta.id} style={{textDecoration: 'none', color: 'inherit'}}>
-                        <div className="card">
-                            {carta.imagem_url && (
-                                <img 
-                                    src={carta.imagem_url} 
-                                    alt={carta.nome} 
-                                    style={{ maxWidth: '100px', height: 'auto', marginBottom: '10px' }}
-                                />
-                            )}
-                            <h3>{carta.nome}</h3>
-                            <p><strong>Tipo:</strong> {carta.tipo || 'N/A'}</p>
-                            <p><strong>Ataque/Defesa:</strong> {carta.ataque ?? 'N/A'}/${carta.defesa ?? 'N/A'}</p>
-                            <p>{carta.efeito || 'Sem efeito especial.'}</p>
-                        <p className="price">
-                        R$ {carta.preco} — <span style={{ color: carta.quantidade > 0 ? 'green' : 'red' }}>
-                            {carta.quantidade > 0 ? `${carta.quantidade} em estoque` : 'Sem estoque'}
-                        </span>
-                        </p>
-                        {token && (
-                            <button className="delete-btn" onClick={() => handleDeleteCard(carta.id, carta.nome)}>Deletar</button>
-                        )}
-                    </div>
-                    </Link>
-                ))}
-            </div>
+            <section className="card-grid-section">
+                <div className="section-header">
+                    <h2>Catálogo Completo</h2> 
+                </div>
+                <div className="card-grid">
+                    {cartas.map(carta => (
+                        <ProductCard key={carta.id} carta={carta} /> 
+                    ))}
+                </div>
+            </section>
+            
+            {cartas.length === 0 && !loading && (
+                 <p>{token ? 'Catálogo vazio. Adicione cartas.' : 'Catálogo vazio.'}</p>
+            )}
         </div>
     );
 }
