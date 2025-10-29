@@ -39,32 +39,64 @@ router.post('/carrinho', validarToken, async (req, res) => {
         return res.status(400).json({ message: 'Quantidade deve ser um número positivo.' });
     }
 
-    try {
-        const response = await axios.get(`http://catalogo_api:3000/api/cartas/${produto_id}`);
-        const preco_unitario = response.data.preco;
+    const client = await db.pool.connect();
+    console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Adicionando produtoId: ${produto_id}, Qtd: ${quantidade}`);
 
-        if (preco_unitario == null) {
-             return res.status(404).json({ message: 'Não foi possível obter o preço do produto (produto não encontrado?).' });
+    try {
+        await client.query('BEGIN');
+        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Transação iniciada para produtoId: ${produto_id}`);
+
+        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Verificando estoque/preço (com lock) para produtoId: ${produto_id}...`);
+        const cartaQuery = 'SELECT preco, quantidade FROM cartas WHERE id = $1 FOR UPDATE';
+        const cartaResult = await client.query(cartaQuery, [produto_id]);
+
+        if (cartaResult.rows.length === 0 ) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({message:'Produto não encontrado no catálogo.'})
         }
 
-        const itemExistenteQuery = 'SELECT * FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2';
-        const itemExistente = await db.query(itemExistenteQuery, [usuarioId, produto_id]);
+        const carta = cartaResult.rows[0];
+        const estoqueAtual = carta.quantidade;
+        const preco_unitario = carta.preco;
 
-        let result;
+        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, ProdutoId: ${produto_id}, Estoque: ${estoqueAtual}, Preço: ${preco_unitario}`);
+
+        if (estoqueAtual < quantidade) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({message: 'Estoque insufienciente para a quantidade solicitada.'})
+        }
+
+        const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2';
+        const itemExistente = await client.query(itemExistenteQuery, [usuarioId, produto_id]);
+
+        let resultCarrinho;
         if (itemExistente.rows.length > 0) {
             const existingItem = itemExistente.rows[0];
             const novaQuantidade = existingItem.quantidade + quantidade;
-            const updateQuery = `UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *`;
-            result = await db.query(updateQuery, [novaQuantidade, preco_unitario, existingItem.id]);
-        } else {
-            const insertQuery = `INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *`;
-            result = await db.query(insertQuery, [usuarioId, produto_id, quantidade, preco_unitario]);
+            const updateQuery = 'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
+            resultCarrinho = await client.query(updateQuery, [novaQuantidade, preco_unitario, existingItem.id]);
+        } else { 
+            const insertQuery = 'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
+            resultCarrinho = await client.query(insertQuery, [usuarioId, produto_id, quantidade, preco_unitario]);
         }
 
-        return res.status(201).json(result.rows[0]);
+        const novoEstoque = estoqueAtual - quantidade;
+        const updateEstoqueQuery = 'UPDATE cartas SET quantidade = $1 WHERE id = $2';
+        await client.query(updateEstoqueQuery, [novoEstoque, produto_id]);
+
+        await client.query('COMMIT');
+        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Transação concluída com sucesso para produtoId: ${produto_id}`);
+
+        return res.status(201).json(resultCarrinho.rows[0]);
+
     } catch (error) {
-        console.error(`[POST /carrinho] Erro: ${error.message}`);
-        return res.status(500).json({ message: 'Erro interno do servidor ao adicionar/atualizar item no carrinho.' });
+        await client.query('ROLLBACK');
+        if (error.code === '23505' && error.constraint === 'uniq_carrinho_usuario_produto') {
+            return res.status(409).json({message: 'Este item já está sendo adicionado ao carrinho. Tente atualizar a quantidade.'});
+        }
+        return res.status(500).json({message: 'Erro interno do servidor ao processar o carrinho'});
+    } finally {
+        client.release();
     }
 });
 
