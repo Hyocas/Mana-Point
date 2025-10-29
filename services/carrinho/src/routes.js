@@ -145,18 +145,44 @@ router.delete('/carrinho/:item_id', validarToken, async (req, res) => {
     const usuarioId = req.usuarioId;
     const { item_id } = req.params;
 
-    try {
-        const query = 'DELETE FROM carrinho_itens WHERE id = $1 AND usuario_id = $2 RETURNING *';
-        const result = await db.query(query, [item_id, usuarioId]);
+    console.log(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, Iniciando remoção do itemId: ${item_id}`);
 
-        if (result.rowCount === 0) {
+    const client = await db.pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const itemQuery = 'SELECT produto_id, quantidade FROM carrinho_itens WHERE id = $1 AND usuario_id = $2 FOR UPDATE';
+        const itemResult = await client.query(itemQuery, [item_id, usuarioId]);
+
+        if (itemResult.rows.length === 0) {
+            console.warn(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ItemId: ${item_id} não encontrado ou não pertence ao usuário (404).`);
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Item do carrinho não encontrado ou não pertence a este usuário.' });
         }
+
+        const itemParaRemover = itemResult.rows[0];
+        const produtoId = itemParaRemover.produto_id;
+        const quantidadeParaDevolver = itemParaRemover.quantidade;
+
+        const deleteQuery = 'DELETE FROM carrinho_itens WHERE id = $1 AND usuario_id = $2';
+        await client.query(deleteQuery, [item_id, usuarioId]);
+
+        const updateEstoqueQuery = 'UPDATE cartas SET quantidade = quantidade + $1 WHERE id = $2';
+        await client.query(updateEstoqueQuery, [quantidadeParaDevolver, produtoId]);
+
+        await client.query('COMMIT');
+
+        console.log(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ItemId: ${item_id} removido e ${quantidadeParaDevolver} unidade(s) do ProdutoId: ${produtoId} devolvidas ao estoque com sucesso.`);
         return res.status(204).send();
+
     } catch (error) {
-        console.error(`[DELETE /carrinho/:id] Erro: ${error.message}`);
-        return res.status(500).json({ message: 'Erro interno do servidor ao deletar item do carrinho.' });
+        console.error(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ERRO na transação para itemId: ${item_id}: ${error.message}`, error.stack);
+        await client.query('ROLLBACK');
+        return res.status(500).json({ message: 'Erro interno do servidor ao processar remoção do carrinho.' });
+    } finally {
+        client.release();
     }
-});
+})
 
 module.exports = router;
