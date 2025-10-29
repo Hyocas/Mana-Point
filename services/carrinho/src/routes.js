@@ -121,23 +121,97 @@ router.get('/carrinho/:usuario_id_param', validarToken, async (req, res) => {
 router.put('/carrinho/:item_id', validarToken, async (req, res) => {
     const usuarioId = req.usuarioId;
     const { item_id } = req.params;
-    const { quantidade } = req.body;
+    const { quantidade: novaQuantidade } = req.body;
 
-    if (quantidade == null || typeof quantidade !== 'number' || quantidade <= 0) {
+    console.log(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, Tentando atualizar itemId: ${item_id} -> novaQtd: ${novaQuantidade}`);
+
+    if (novaQuantidade == null || typeof novaQuantidade !== 'number' || novaQuantidade <= 0) {
+        console.warn(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - Bad Request: Quantidade inválida (${novaQuantidade}).`);
         return res.status(400).json({ message: 'A quantidade deve ser um número positivo.' });
     }
 
-    try {
-        const query = 'UPDATE carrinho_itens SET quantidade = $1 WHERE id = $2 AND usuario_id = $3 RETURNING *';
-        const result = await db.query(query, [quantidade, item_id, usuarioId]);
+    const client = await db.pool.connect();
 
-        if (result.rows.length === 0) {
+    try {
+        await client.query('BEGIN');
+
+        const itemQuery = 'SELECT produto_id, quantidade FROM carrinho_itens WHERE id = $1 AND usuario_id = $2 FOR UPDATE';
+        const itemResult = await client.query(itemQuery, [item_id, usuarioId]);
+
+        if (itemResult.rows.length === 0) {
+            console.warn(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} não encontrado ou não pertence ao usuário (404).`);
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Item do carrinho não encontrado ou não pertence a este usuário.' });
         }
-        return res.status(200).json(result.rows[0]);
+
+        const itemAntigo = itemResult.rows[0];
+        const produtoId = itemAntigo.produto_id;
+        const quantidadeAntiga = itemAntigo.quantidade;
+        const diferencaQuantidade = novaQuantidade - quantidadeAntiga;
+
+        let estoqueAtual;
+        if (diferencaQuantidade !== 0) {
+            const cartaQuery = 'SELECT quantidade FROM cartas WHERE id = $1 FOR UPDATE';
+            const cartaResult = await client.query(cartaQuery, [produtoId]);
+
+            if (cartaResult.rows.length === 0) {
+                console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO CRÍTICO: ProdutoId ${produtoId} não encontrado durante verificação de estoque.`);
+                await client.query('ROLLBACK');
+                return res.status(500).json({ message: 'Erro: Produto associado ao carrinho não encontrado no catálogo.' });
+            }
+            estoqueAtual = cartaResult.rows[0].quantidade;
+
+            if (diferencaQuantidade > 0 && estoqueAtual < diferencaQuantidade) {
+                console.warn(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, Estoque insuficiente para produtoId: ${produtoId}. Necessário: ${diferencaQuantidade}, Disponível: ${estoqueAtual}`);
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: `Estoque insuficiente. Apenas ${estoqueAtual} unidades adicionais disponíveis.` });
+            }
+        }
+
+        const updateCarrinhoQuery = 'UPDATE carrinho_itens SET quantidade = $1 WHERE id = $2 AND usuario_id = $3 RETURNING *';
+        const resultCarrinho = await client.query(updateCarrinhoQuery, [novaQuantidade, item_id, usuarioId]);
+
+        if (resultCarrinho.rows.length === 0) {
+            console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, Falha ao atualizar itemId: ${item_id} após lock (inesperado).`);
+            await client.query('ROLLBACK');
+            return res.status(500).json({ message: 'Erro inesperado ao atualizar item do carrinho.' });
+        }
+
+        if (diferencaQuantidade !== 0) {
+            let estoqueAntesDoAjuste = estoqueAtual;
+            if (estoqueAntesDoAjuste === undefined) {
+                 const estoqueAtualResult = await client.query('SELECT quantidade FROM cartas WHERE id = $1', [produtoId]);
+                 if (estoqueAtualResult.rows.length === 0) {
+                      console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO CRÍTICO: ProdutoId ${produtoId} não encontrado durante ajuste de estoque para decremento.`);
+                      await client.query('ROLLBACK');
+                      return res.status(500).json({ message: 'Erro: Produto associado ao carrinho não encontrado no catálogo para ajustar estoque.' });
+                 }
+                 estoqueAntesDoAjuste = estoqueAtualResult.rows[0].quantidade;
+            }
+
+            const novoEstoqueCalculado = estoqueAntesDoAjuste - diferencaQuantidade;
+
+            if (novoEstoqueCalculado < 0) {
+                 console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO LÓGICO: Tentativa de deixar estoque negativo (${novoEstoqueCalculado}) para produtoId: ${produtoId}.`);
+                 await client.query('ROLLBACK');
+                 return res.status(500).json({ message: 'Erro interno: Cálculo resultou em estoque negativo.' });
+            }
+
+            const updateEstoqueQuery = 'UPDATE cartas SET quantidade = $1 WHERE id = $2';
+            await client.query(updateEstoqueQuery, [novoEstoqueCalculado, produtoId]);
+        }
+
+        await client.query('COMMIT');
+        console.log(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} atualizado para qtd ${novaQuantidade}. Estoque ajustado.`);
+
+        return res.status(200).json(resultCarrinho.rows[0]);
+
     } catch (error) {
-        console.error(`[PUT /carrinho/:id] Erro: ${error.message}`);
-        return res.status(500).json({ message: 'Erro interno do servidor ao atualizar item do carrinho.' });
+        console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, ERRO na transação para itemId: ${item_id}: ${error.message}`, error.stack);
+        await client.query('ROLLBACK');
+        return res.status(500).json({ message: 'Erro interno do servidor ao processar atualização do carrinho.' });
+    } finally {
+        client.release();
     }
 });
 
@@ -183,6 +257,6 @@ router.delete('/carrinho/:item_id', validarToken, async (req, res) => {
     } finally {
         client.release();
     }
-})
+});
 
 module.exports = router;
