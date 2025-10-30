@@ -315,7 +315,7 @@ button:disabled, .placeholder { background-color: #555 !important; cursor: not-a
   width: 100%; 
   height: 250px; /* Altura fixa para a imagem */
   object-fit: contain; /* Ajusta a imagem sem distorcer */
-  background-color: #fff; /* Fundo branco para imagens transparentes */
+  background-color: #ffffff00; /* Fundo branco para imagens transparentes */
 }
 
 .product-card-image-placeholder { 
