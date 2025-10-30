@@ -213,6 +213,7 @@ export default function CartPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <label htmlFor={`qtd-${item.cartItemId}`}>Qtd:</label>
                                 <input
+<<<<<<< HEAD
                                     id={`qtd-${item.cartItemId}`}
                                     type="number"
                                     value={item.quantidade}
@@ -230,6 +231,25 @@ export default function CartPage() {
                                     }}
                                     min="0"
                                     style={{ width: '60px', textAlign: 'center' }}
+=======
+                                id={`qtd-${item.cartItemId}`}
+                                type="number"
+                                value={item.quantidade}
+                                onChange={(e) => {
+                                    const novaQtd = parseInt(e.target.value) || 0;
+                                    const maxPermitido = item.quantidade + (item.estoque_disponivel ?? 0); 
+                                    const qtdAjustada = Math.max(0, Math.min(novaQtd, maxPermitido));
+
+                                    if (novaQtd > maxPermitido) {
+                                    alert(`Quantidade máxima em estoque: ${item.estoque_disponivel}. Você já tem ${item.quantidade}.`);
+                                    handleUpdateQuantity(item.cartItemId, maxPermitido);
+                                    } else {
+                                        handleUpdateQuantity(item.cartItemId, qtdAjustada);
+                                    }
+                                }}
+                                min="0"
+                                style={{ width: '60px', textAlign: 'center' }}
+>>>>>>> origin/v1.2
                                 />
                                 <button
                                     className="delete-btn"
