@@ -28,7 +28,7 @@ export default function RegisterPage() {
             }
             setSuccess('Cadastro realizado com sucesso! Redirecionando...');
             setTimeout(() => {
-                navigate('/'); 
+                navigate('/login'); 
             }, 2000);
 
         } catch (err) {
