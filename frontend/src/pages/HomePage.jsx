@@ -10,6 +10,7 @@ const [cardNameToAdd, setCardNameToAdd] = useState('');
 const [quantidadeToAdd, setQuantidadeToAdd] = useState(1);
 const [searchTerm, setSearchTerm] = useState('');
 const [searching, setSearching] = useState(false);
+const [ydkUploading, setYdkUploading] = useState(false);
 
 const navigate = useNavigate();
 const catalogApiUrl = '/api/catalogo_proxy';
@@ -77,6 +78,70 @@ const handleAddCard = async (e) => {
     }
 };
 
+// ------------------- Upload YDK -------------------
+const handleYdkUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    setYdkUploading(true);
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+        try {
+            const text = e.target.result;
+            const lines = text.split('\n');
+
+            const allCardIds = lines
+                .map(line => line.trim())
+                .filter(line => /^\d+$/.test(line));
+
+            if (allCardIds.length === 0) {
+                throw new Error("Nenhum ID de carta válido encontrado no arquivo.");
+            }
+
+            const cardCountMap = allCardIds.reduce((countMap, cardId) => {
+                countMap[cardId] = (countMap[cardId] || 0) + 1;
+                return countMap;
+            }, {});
+
+        const uniqueCardIds = Object.keys(cardCountMap);
+        const response = await fetch(`${catalogApiUrl}/cartas/ydk`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ deckList: uniqueCardIds })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+             throw new Error(data.message || 'Erro ao processar arquivo .ydk');
+        }
+    
+            alert(`Catálogo atualizado com ${data.length} cartas únicas.`);
+            fetchCatalog(); // Atualiza a exibição do catálogo
+            if (window.confirm("Catálogo atualizado. Deseja adicionar essas cartas ao seu carrinho agora?")) {
+            console.log("Adicionando ao carrinho (lógica pendente):", cardCountMap);
+            alert("Deck adicionado ao carrinho! (Funcionalidade pendente)");
+            }
+        } catch (err) {
+            alert(err.message);
+        } finally {
+             event.target.value = null; // Limpa o input de arquivo
+             setYdkUploading(false);
+        }
+    };
+    reader.onerror = () => {
+        alert("Erro ao ler o arquivo.");
+        event.target.value = null;
+        setYdkUploading(false);
+    };
+    
+    reader.readAsText(file);
+};
+
 // ------------------- Deletar carta -------------------
 const handleDeleteCard = async (cardId, cardName) => {
     if (!confirm(`Tem certeza que deseja deletar a carta "${cardName}"?`)) return;
@@ -128,8 +193,7 @@ return (
         <form 
             id="search-card-form" 
             onSubmit={handleSearch}
-            style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}
-        >
+            style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
             <input
                 type="text"
                 placeholder="Pesquisar carta..."
@@ -140,6 +204,23 @@ return (
             <button type="submit" disabled={searching}>
                 {searching ? 'Buscando...' : 'Buscar'}
             </button>
+        </form>
+
+        {/* Upload de arquivo .ydk */}
+
+        <form 
+             id="add-ydk-form"
+             style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
+             <label htmlFor="ydk-upload" style={{ flexShrink: 0 }}>Adicionar por .YDK:</label>
+             <input
+                 type="file"
+                 id="ydk-upload"
+                 accept=".ydk"
+                 onChange={handleYdkUpload}
+                 disabled={ydkUploading}
+                 style={{ flexGrow: 1 }}
+             />
+             {ydkUploading && <span style={{ fontSize: '0.9em' }}>Processando...</span>}
         </form>
 
         {/* Adicionar carta (apenas se logado) */}

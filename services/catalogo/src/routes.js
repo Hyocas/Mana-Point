@@ -3,6 +3,92 @@ const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
 
+router.post('/cartas/ydk', async (req, res) => {
+    const { deckList } = req.body;
+
+    if (!deckList || !Array.isArray(deckList)) {
+        return res.status(400).json({ message: 'Deck list inválido.' });
+    }
+
+    try {
+        // 1. Usamos um array normal para guardar os resultados
+        const cartasProcessadas = [];
+        
+        // 2. Criamos um contador APENAS para as requisições à API
+        let apiRequestCount = 0;
+
+        // 3. Trocamos Promise.all por um loop for...of para processar sequencialmente
+        for (const cardId of deckList) {
+            
+            // Usamos um try/catch interno para que um card com falha não pare o loop
+            try {
+                const result = await db.query('SELECT * FROM cartas WHERE id = $1', [cardId]);
+
+                // Se a carta já existe no DB, adicione ao resultado e pule para a próxima
+                if (result.rows.length > 0) {
+                    cartasProcessadas.push(result.rows[0]);
+                    continue; // Pula para o próximo cardId sem contar como requisição de API
+                }
+
+                // --- LÓGICA DE RATE LIMIT ---
+                // Se a carta NÃO está no DB, vamos buscar na API.
+                // Verificamos se já atingimos o limite de 19 requisições.
+                if (apiRequestCount > 0 && apiRequestCount % 19 === 0) {
+                    console.log(`[catalogo_api] Limite de 19 requisições atingido. Pausando por 2 segundos...`);
+                    await sleep(2000); // Pausa por 2000ms (2 segundos)
+                }
+                // ---------------------------
+
+                console.warn(`[catalogo_api] Carta ID ${cardId} não encontrada no DB. Buscando na API...`);
+                
+                const apiRes = await axios.get(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${cardId}`);
+                
+                // Incrementamos o contador APÓS a chamada bem-sucedida
+                apiRequestCount++;
+
+                if (!apiRes.data.data || apiRes.data.data.length === 0) {
+                    console.warn(`[catalogo_api] Carta com ID ${cardId} não encontrada na API YGOProDeck.`);
+                    continue; // Pula esta carta
+                }
+
+                const carta = apiRes.data.data[0];
+
+                // Mapeamento dos dados
+                const nomeCarta = carta.name;
+                const id = carta.id || null;
+                const tipo = carta.type || null;
+                const ataque = carta.atk || null;
+                const defesa = carta.def || null;
+                const efeito = carta.desc || null;
+                const preco = carta.card_prices?.[0]?.cardmarket_price * 5.37 || 0;
+                const imagemUrl = carta.card_images?.[0]?.image_url || null;
+                const quantidade = 0; 
+
+                // Inserir no DB
+                const insert = await db.query(
+                    `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                     RETURNING *`,
+                    [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
+                );
+
+                cartasProcessadas.push(insert.rows[0]);
+
+            } catch (error) {
+                console.error(`[catalogo_api] Falha ao processar card ID ${cardId}: ${error.message}`);
+                // Continua o loop mesmo se um card falhar
+            }
+        }
+
+        // 4. Envia a resposta final com todas as cartas processadas
+        return res.status(200).json(cartasProcessadas);
+
+    } catch (error) {
+        console.error('[catalogo_api] Erro geral na rota /cartas/ydk:', error.message);
+        return res.status(500).json({ message: 'Erro ao processar a lista de cartas.' });
+    }
+});
+
 router.get('/cartas/search', async (req, res) => {
     const nome = req.query.nome;
 

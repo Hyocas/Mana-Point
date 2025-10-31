@@ -203,10 +203,10 @@ export default function CartPage() {
                                 <p><strong>Subtotal:</strong> R$ {(item.quantidade * item.preco_unitario).toFixed(2)}</p>
                                 <p>
                                     <strong>Estoque disponível:</strong>{' '}
-                                    <span style={{ color: item.estoque_disponivel > 0 ? 'green' : 'red' }}>
+                                    <span style={{ color: item.estoque_disponivel > 0 ? 'green' : 'yellow' }}>
                                     {item.estoque_disponivel > 0
                                         ? `${item.estoque_disponivel} unidade${item.estoque_disponivel > 1 ? 's' : ''}`
-                                        : 'Sem estoque'}
+                                        : 'Última unidade adicionada!'}
                                     </span>
                                 </p>
                             </div>

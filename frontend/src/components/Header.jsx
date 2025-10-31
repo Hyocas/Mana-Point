@@ -28,7 +28,9 @@ export default function Header() {
            )}
           <Link to="/carrinho" className="action-item" title="Ver Carrinho">
             <ShoppingCart size={24} />           
-            <span className="cart-count">0</span>
+            <span className="cart-count">
+              {localStorage.getItem('cartItemCount') || 0}
+            </span>
           </Link>
         </div>
       </div>
