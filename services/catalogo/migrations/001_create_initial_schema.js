@@ -10,7 +10,7 @@ exports.up = (pgm) => {
         );
 
         CREATE TABLE cartas (
-            id SERIAL PRIMARY KEY,
+            id INT PRIMARY KEY,
             nome VARCHAR(255) NOT NULL,
             tipo VARCHAR(100),
             ataque INT,

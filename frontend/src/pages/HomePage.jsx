@@ -47,12 +47,6 @@ useEffect(() => {
     fetchCatalog();
 }, []);
 
-// ------------------- Logout -------------------
-const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/');
-};
-
 // ------------------- Adicionar carta -------------------
 const handleAddCard = async (e) => {
     e.preventDefault();

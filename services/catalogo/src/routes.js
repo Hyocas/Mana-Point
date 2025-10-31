@@ -31,6 +31,7 @@ router.get('/cartas/search', async (req, res) => {
         const carta = apiRes.data.data[0];
 
         const nomeCarta = carta.name;
+        const id = carta.id || null;
         const tipo = carta.type || null;
         const ataque = carta.atk || null;
         const defesa = carta.def || null;
@@ -40,10 +41,10 @@ router.get('/cartas/search', async (req, res) => {
         const quantidade = 0;
 
         const insert = await db.query(
-            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
              RETURNING *`,
-            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
+            [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
         );
 
         return res.status(201).json(insert.rows);
@@ -131,6 +132,7 @@ router.post('/cartas', async (req, res) => {
         }
 
         const carta = apiRes.data.data[0];
+        const id = carta.id || null;
         const nomeCarta = carta.name;
         const tipo = carta.type || null;
         const ataque = carta.atk || null;
@@ -142,9 +144,9 @@ router.post('/cartas', async (req, res) => {
         const imagemUrl = carta.card_images?.[0]?.image_url || null;
 
         const insert = await db.query(
-            `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
+            `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
         );
 
         return res.status(201).json(insert.rows[0]);
