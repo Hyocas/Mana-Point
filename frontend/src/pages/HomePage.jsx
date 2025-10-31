@@ -14,6 +14,8 @@ const [ydkUploading, setYdkUploading] = useState(false);
 
 const navigate = useNavigate();
 const catalogApiUrl = '/api/catalogo_proxy';
+const carrinhoApiUrl = '/api/carrinho_proxy';
+
 const token = localStorage.getItem('authToken');
 
 // ------------------- Fetch catálogo -------------------
@@ -82,10 +84,10 @@ const handleAddCard = async (e) => {
 const handleYdkUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     setYdkUploading(true);
     const reader = new FileReader();
-    
+
     reader.onload = async (e) => {
         try {
             const text = e.target.result;
@@ -100,49 +102,63 @@ const handleYdkUpload = async (event) => {
             }
 
             const cardCountMap = allCardIds.reduce((countMap, cardId) => {
-                countMap[cardId] = (countMap[cardId] || 0) + 1;
-                return countMap;
+                countMap[cardId] = (countMap[cardId] || 0) + 1;
+                return countMap;
             }, {});
 
-        const uniqueCardIds = Object.keys(cardCountMap);
-        const response = await fetch(`${catalogApiUrl}/cartas/ydk`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ deckList: uniqueCardIds })
-        });
+            const uniqueCardIds = Object.keys(cardCountMap);
+            const response = await fetch(`${catalogApiUrl}/cartas/ydk`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ deckList: allCardIds })
+            });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-             throw new Error(data.message || 'Erro ao processar arquivo .ydk');
-        }
-    
-            alert(`Catálogo atualizado com ${data.length} cartas únicas.`);
-            fetchCatalog(); // Atualiza a exibição do catálogo
-            if (window.confirm("Catálogo atualizado. Deseja adicionar essas cartas ao seu carrinho agora?")) {
-            console.log("Adicionando ao carrinho (lógica pendente):", cardCountMap);
-            alert("Deck adicionado ao carrinho! (Funcionalidade pendente)");
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Erro ao processar arquivo .ydk');
+
+            alert(`Catálogo atualizado com ${data.total} cartas únicas.`);
+            fetchCatalog();
+
+            if (data.prompt && window.confirm(data.prompt)) {
+                for (const carta of data.disponiveis) {
+                    const qtdDesejada = data.idCount[String(carta.id)] || 1;
+                    const qtdFinal = Math.min(qtdDesejada, carta.quantidade);
+
+                    await fetch(`${carrinhoApiUrl}/carrinho`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            produto_id: carta.id,
+                            quantidade: Number(qtdFinal)
+                        })
+                    });
+                }
+                alert('Cartas disponíveis adicionadas ao carrinho com sucesso!');
             }
+
         } catch (err) {
             alert(err.message);
         } finally {
-             event.target.value = null; // Limpa o input de arquivo
-             setYdkUploading(false);
+            event.target.value = null;
+            setYdkUploading(false);
         }
     };
+
     reader.onerror = () => {
         alert("Erro ao ler o arquivo.");
         event.target.value = null;
         setYdkUploading(false);
     };
-    
+
     reader.readAsText(file);
 };
 
-// ------------------- Deletar carta -------------------
 const handleDeleteCard = async (cardId, cardName) => {
     if (!confirm(`Tem certeza que deseja deletar a carta "${cardName}"?`)) return;
 
@@ -162,7 +178,6 @@ const handleDeleteCard = async (cardId, cardName) => {
     }
 };
 
-// ------------------- Buscar carta -------------------
 const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
@@ -182,14 +197,12 @@ const handleSearch = async (e) => {
     }
 };
 
-// ------------------- Render -------------------
 if (loading) return <p>Carregando catálogo...</p>;
 if (error) return <p className="error">{error}</p>;
 
 return (
     <div className="homepage-content">
 
-        {/* Busca interna pela api */}
         <form 
             id="search-card-form" 
             onSubmit={handleSearch}
@@ -206,8 +219,6 @@ return (
             </button>
         </form>
 
-        {/* Upload de arquivo .ydk */}
-
         <form 
              id="add-ydk-form"
              style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
@@ -223,7 +234,6 @@ return (
              {ydkUploading && <span style={{ fontSize: '0.9em' }}>Processando...</span>}
         </form>
 
-        {/* Adicionar carta (apenas se logado) */}
         {token && (
             <form 
                 id="add-card-form" 
@@ -252,7 +262,6 @@ return (
             </form>
         )}
 
-        {/* Grid de cartas */}
         <section className="card-grid-section">
             <div className="section-header">
                 <h3>Catálogo Completo</h3> 
@@ -268,7 +277,6 @@ return (
             </div>
         </section>
 
-        {/* Mensagem de vazio */}
         {cartas.length === 0 && !loading && (
              <p>{token ? 'Catálogo vazio. Adicione cartas.' : 'Nenhuma carta encontrada.'}</p>
         )}

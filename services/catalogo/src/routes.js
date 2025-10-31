@@ -2,86 +2,88 @@ const express = require('express');
 const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 router.post('/cartas/ydk', async (req, res) => {
     const { deckList } = req.body;
+    const usuarioId = req.usuarioId;
 
     if (!deckList || !Array.isArray(deckList)) {
         return res.status(400).json({ message: 'Deck list inválido.' });
     }
 
     try {
-        // 1. Usamos um array normal para guardar os resultados
+        const idCount = {};
+        deckList.forEach(id => {
+            idCount[id] = (idCount[id] || 0) + 1;
+        });
+
         const cartasProcessadas = [];
-        
-        // 2. Criamos um contador APENAS para as requisições à API
         let apiRequestCount = 0;
 
-        // 3. Trocamos Promise.all por um loop for...of para processar sequencialmente
         for (const cardId of deckList) {
-            
-            // Usamos um try/catch interno para que um card com falha não pare o loop
             try {
                 const result = await db.query('SELECT * FROM cartas WHERE id = $1', [cardId]);
 
-                // Se a carta já existe no DB, adicione ao resultado e pule para a próxima
                 if (result.rows.length > 0) {
                     cartasProcessadas.push(result.rows[0]);
-                    continue; // Pula para o próximo cardId sem contar como requisição de API
+                    continue;
                 }
 
-                // --- LÓGICA DE RATE LIMIT ---
-                // Se a carta NÃO está no DB, vamos buscar na API.
-                // Verificamos se já atingimos o limite de 19 requisições.
                 if (apiRequestCount > 0 && apiRequestCount % 19 === 0) {
-                    console.log(`[catalogo_api] Limite de 19 requisições atingido. Pausando por 2 segundos...`);
-                    await sleep(2000); // Pausa por 2000ms (2 segundos)
+                    console.log(`[catalogo_api] Aguardando 2s para respeitar limite da API...`);
+                    await sleep(2000);
+                    apiRequestCount = 0;
                 }
-                // ---------------------------
 
-                console.warn(`[catalogo_api] Carta ID ${cardId} não encontrada no DB. Buscando na API...`);
-                
                 const apiRes = await axios.get(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${cardId}`);
-                
-                // Incrementamos o contador APÓS a chamada bem-sucedida
                 apiRequestCount++;
 
-                if (!apiRes.data.data || apiRes.data.data.length === 0) {
-                    console.warn(`[catalogo_api] Carta com ID ${cardId} não encontrada na API YGOProDeck.`);
-                    continue; // Pula esta carta
-                }
+                if (!apiRes.data.data || apiRes.data.data.length === 0) continue;
 
                 const carta = apiRes.data.data[0];
-
-                // Mapeamento dos dados
-                const nomeCarta = carta.name;
-                const id = carta.id || null;
+                const id = carta.id;
+                const nome = carta.name;
                 const tipo = carta.type || null;
                 const ataque = carta.atk || null;
                 const defesa = carta.def || null;
                 const efeito = carta.desc || null;
                 const preco = carta.card_prices?.[0]?.cardmarket_price * 5.37 || 0;
-                const imagemUrl = carta.card_images?.[0]?.image_url || null;
-                const quantidade = 0; 
+                const imagem_url = carta.card_images?.[0]?.image_url || null;
+                const quantidade = 0;
 
-                // Inserir no DB
                 const insert = await db.query(
                     `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
                      RETURNING *`,
-                    [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
+                    [id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade]
                 );
 
                 cartasProcessadas.push(insert.rows[0]);
 
-            } catch (error) {
-                console.error(`[catalogo_api] Falha ao processar card ID ${cardId}: ${error.message}`);
-                // Continua o loop mesmo se um card falhar
+            } catch (err) {
+                console.error(`[catalogo_api] Erro ao processar carta ${cardId}: ${err.message}`);
             }
         }
 
-        // 4. Envia a resposta final com todas as cartas processadas
-        return res.status(200).json(cartasProcessadas);
+        console.log('[catalogo_api] Todas as cartas foram processadas.');
+
+        const disponiveisQuery = `
+            SELECT id, nome, quantidade, preco
+            FROM cartas
+            WHERE id = ANY($1::int[])
+            AND quantidade > 0
+        `;
+        const disponiveisResult = await db.query(disponiveisQuery, [Object.keys(idCount).map(Number)]);
+        const disponiveis = disponiveisResult.rows;
+
+        return res.status(200).json({
+            message: 'Cartas processadas com sucesso.',
+            total: cartasProcessadas.length,
+            disponiveis,
+            idCount,
+            prompt: 'Deseja adicionar ao carrinho as cartas que estão disponíveis em estoque?'
+        });
 
     } catch (error) {
         console.error('[catalogo_api] Erro geral na rota /cartas/ydk:', error.message);
