@@ -109,6 +109,19 @@ router.post('/cartas', async (req, res) => {
     }
 
     try {
+        const result = await db.query(
+            'SELECT * FROM cartas WHERE nome ILIKE $1',
+            [`%${nome}%`]
+        );
+
+        if (result.rows.length > 0) {
+            return res.status(200).json({
+                message: `A carta "${result.rows[0].nome}" já está cadastrada no sistema.`,
+                carta: result.rows[0],
+                jaExistente: true
+            });
+        }
+        
         const apiRes = await axios.get(
             `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
         );
@@ -128,13 +141,13 @@ router.post('/cartas', async (req, res) => {
         //Extrair a URL da imagem
         const imagemUrl = carta.card_images?.[0]?.image_url || null;
 
-        const result = await db.query(
+        const insert = await db.query(
             `INSERT INTO cartas (nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
             [nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
         );
 
-        return res.status(201).json(result.rows[0]);
+        return res.status(201).json(insert.rows[0]);
     } catch (error) {
         console.error('[catalogo_api] Erro ao adicionar carta:', error.message);
         if (error.response) {

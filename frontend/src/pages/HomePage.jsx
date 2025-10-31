@@ -69,6 +69,11 @@ const handleAddCard = async (e) => {
         });
 
         const data = await response.json();
+        if (data.jaExistente) {
+            alert(data.message);
+        } else {
+            alert("Carta adicionada com sucesso!");
+        }
         if (!response.ok) throw new Error(data.message || "Erro ao adicionar carta");
 
         setCardNameToAdd('');
