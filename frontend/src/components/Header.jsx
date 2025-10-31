@@ -4,15 +4,7 @@ import { Search, ShoppingCart } from 'lucide-react';
 
 export default function Header() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('all');
   const token = localStorage.getItem('authToken');
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) return;
-    alert(`Busca por "${searchTerm}" na categoria "${category}" ainda não implementada.`);
-  };
 
   const handleLogout = () => {
       localStorage.removeItem('authToken');
@@ -25,26 +17,8 @@ export default function Header() {
         <Link to="/" className="logo-link">
           <img src="/logo-transparente.png" alt="Mana-Point Logo" className="header-logo" />
         </Link>
-        
-        <form className="search-bar style-b" onSubmit={handleSearch}>
-          <select 
-            className="category-select" 
-            value={category} 
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="all">Todas</option>
-            <option value="yugioh">Yu-Gi-Oh!</option>
-            <option value="pokemon">Pokémon</option>
-            <option value="magic">Magic</option>
-          </select>
-          <input 
-            type="text" 
-            placeholder="Buscar em Todas..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} 
-          />
-          <button type="submit"><Search size={18} /></button>
-        </form>
+
+        <h1>Bem-vindo ao Mana-Point!</h1>
         
         <div className="header-actions style-b">
            {token ? (
