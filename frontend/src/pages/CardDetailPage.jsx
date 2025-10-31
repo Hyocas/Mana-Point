@@ -117,7 +117,11 @@ export default function CardDetailPage() {
                 )}
                 <h3>{carta.nome}</h3>
                 <p><strong>Tipo:</strong> {carta.tipo || 'N/A'}</p>
-                <p><strong>Ataque/Defesa:</strong> {carta.ataque ?? 'N/A'}/${carta.defesa ?? 'N/A'}</p>
+                {carta.tipo !== 'Spell Card' && carta.tipo !== 'Trap Card' && (
+                <p>
+                    <strong>Ataque/Defesa:</strong> {carta.ataque ?? '0'} / {carta.defesa ?? '0'}
+                </p>
+                )}
                 <p>{carta.efeito || 'Sem efeito especial.'}</p>
                 <p className="price">R$ {carta.preco}</p>
                 <button onClick={handleAddToCart} style={{marginTop: '1rem'}}>Adicionar ao Carrinho</button>
