@@ -75,7 +75,6 @@ export default function RegisterPage() {
                             required 
                         />
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="register-confirm-password">Confirmar Senha</label>
                         <input 

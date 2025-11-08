@@ -5,11 +5,21 @@ import { Search, ShoppingCart } from 'lucide-react';
 export default function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleLogout = () => {
       localStorage.removeItem('authToken');
       window.location.reload();
   };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) {
+      navigate('/');
+    } else {
+      navigate(`/?search=${encodeURIComponent(searchTerm)}`);
+    }
+  }
 
   return (
     <header className="main-header style-b">
@@ -18,7 +28,17 @@ export default function Header() {
           <img src="/logo-transparente.png" alt="Mana-Point Logo" className="header-logo" />
         </Link>
 
-        <h1>Bem-vindo ao Mana-Point!</h1>
+        <form className="header-search-form" onSubmit={handleSearch}>
+            <input
+                type="text"
+                placeholder="Pesquisar carta..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="submit" title="Buscar">
+                <Search size={15} />
+            </button>
+        </form>
         
         <div className="header-actions style-b">
            {token ? (

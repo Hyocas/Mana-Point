@@ -227,9 +227,47 @@ body { display: block; justify-content: normal; align-items: normal; padding: 0;
 .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
 .header-logo { height: 50px; width: auto; transition: transform 0.2s; }
 .header-logo:hover { transform: scale(1.05); }
-.search-bar { display: flex; flex-grow: 1; max-width: 600px; }
-.search-bar input { flex-grow: 1; border-radius: 5px 0 0 5px; border: 1px solid var(--background-light); margin-top: 0; }
-.search-bar button { width: auto; margin-top: 0; border-radius: 0 5px 5px 0; padding: 10px 15px; } /* Ajuste padding */
+
+.header-search-form {
+  position: relative;
+  display: flex; 
+  width: 100%; 
+  max-width: 400px; 
+}
+
+.header-search-form input[type="text"] {
+  width: 100%;
+  padding-right: 35px; 
+  padding-left: 12px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--background-light);
+  background-color: var(--background-dark);
+  color: var(--text-color);
+  font-size: 16px;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+
+.header-search-form button[type="submit"] {
+  position: absolute;
+  right: 10px; 
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: #999;
+  width: auto;
+}
+
+.header-search-form button[type="submit"]:hover {
+  color: #fff;
+  background-color: transparent;
+}
+
 .header-actions { display: flex; gap: 1.5rem; align-items: center; }
 .action-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-color); text-decoration: none; font-weight: bold; transition: color 0.2s; position: relative; } /* Adicionado position relative para dropdown */
 .action-item:hover { color: var(--accent-gold); }
