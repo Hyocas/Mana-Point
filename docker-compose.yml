@@ -1,5 +1,5 @@
 services:
-  # --- FRONTEND ---
+  ### frontend ###
   frontend:
     build:
       context: ./frontend
@@ -12,7 +12,7 @@ services:
       - usuarios_api
       - carrinho_api
 
-  # --- BACKEND (APIs) ---
+  ### backend ###
   catalogo_api:
     build: ./services/catalogo
     ports:
@@ -50,9 +50,9 @@ services:
       - usuarios_api
       - catalogo_api
 
-  # --- FERRAMENTAS ---
-  catalogo_migrator:
-    build: ./services/catalogo
+  ### ferramentas ###
+  all_migrations:
+    build: ./services/migrator
     profiles: ["tools"]
     environment:
       DB_HOST: ${DB_HOST}

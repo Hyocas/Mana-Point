@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "description": "Microsserviço de Catálogo de Cartas",
   "main": "src/index.js",
-  
-"scripts": {
-  "start": "node src/index.js",
-  "test": "echo \"Error: no test specified\" && exit 1",
-  "migrate:up": "node migrate.js"
-},
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

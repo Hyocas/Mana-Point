@@ -1,0 +1,12 @@
+{
+  "name": "central-migrator",
+  "version": "1.0.0",
+  "description": "Roda todas as migrações do projeto",
+  "scripts": {
+    "migrate:up": "node migrate.js"
+  },
+  "dependencies": {
+    "node-pg-migrate": "^8.0.3",
+    "pg": "^8.16.3"
+  }
+}
