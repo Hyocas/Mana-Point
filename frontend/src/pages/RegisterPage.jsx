@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -14,6 +15,16 @@ export default function RegisterPage() {
         e.preventDefault();
         setError('');
         setSuccess('');
+
+        if (password.length < 6) {
+            setError('A senha deve ter no mínimo 6 caracteres.');
+            return;
+        }
+
+        if (password != confirmPassword) {
+            setError('As senhas não conferem.');
+            return;
+        }
 
         try {
             const response = await fetch(`${usersApiUrl}/usuarios/registro`, {
@@ -64,13 +75,24 @@ export default function RegisterPage() {
                             required 
                         />
                     </div>
-                    <p className={`message-area ${error ? 'error' : success ? 'success' : ''}`}>
-                    {error || success}
-                    </p>
+
+                    <div className="form-group">
+                        <label htmlFor="register-confirm-password">Confirmar Senha</label>
+                        <input 
+                            type="password" 
+                            id="register-confirm-password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            required 
+                        />
+                    </div>
                     <button type="submit">Cadastrar</button>
+                    <p className={`message-area ${error ? 'error' : success ? 'success' : ''}`}>
+                    {error || success || '\u00A0'}
+                    </p>
                 </form>
                 <div className="switch-link">
-                    <p>Já tem uma conta? <Link to="/">Faça o login</Link></p>
+                    <p>Já tem uma conta? <Link to="/login">Faça o login</Link></p>
                 </div>
                  <div className="switch-link">
                     <p>Ou <Link to="/catalog">veja o catálogo como visitante</Link></p>

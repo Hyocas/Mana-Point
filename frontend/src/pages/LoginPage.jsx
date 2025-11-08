@@ -61,14 +61,14 @@ export default function LoginPage() {
                             required 
                         />
                     </div>
-                    <p className={`message-area ${error ? 'error' : ''}`}>{error}</p>
                     <button type="submit">Entrar</button>
+                    <p className={`message-area ${error ? 'error' : ''}`}>{error}</p>
                 </form>
                 <div className="switch-link">
                     <p>Não tem uma conta? <Link to="/register">Cadastre-se</Link></p>
                 </div>
                 <div className="switch-link">
-                    <p>Ou <Link to="/catalog">veja o catálogo como visitante</Link></p>
+                    <p>Ou <Link to="/catalog">Veja o catálogo como visitante</Link></p>
                 </div>
             </div>
         </div>
