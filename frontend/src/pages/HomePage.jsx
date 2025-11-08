@@ -8,7 +8,6 @@ const [loading, setLoading] = useState(true);
 const [error, setError] = useState(null);
 const [cardNameToAdd, setCardNameToAdd] = useState('');
 const [quantidadeToAdd, setQuantidadeToAdd] = useState(1);
-const [ydkUploading, setYdkUploading] = useState(false);
 
 const navigate = useNavigate();
 const catalogApiUrl = '/api/catalogo_proxy';
@@ -113,85 +112,6 @@ const handleAddCard = async (e) => {
     }
 };
 
-// ------------------- Upload YDK -------------------
-const handleYdkUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setYdkUploading(true);
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-        try {
-            const text = e.target.result;
-            const lines = text.split('\n');
-
-            const allCardIds = lines
-                .map(line => line.trim())
-                .filter(line => /^\d+$/.test(line));
-
-            if (allCardIds.length === 0) {
-                throw new Error("Nenhum ID de carta válido encontrado no arquivo.");
-            }
-
-            const cardCountMap = allCardIds.reduce((countMap, cardId) => {
-                countMap[cardId] = (countMap[cardId] || 0) + 1;
-                return countMap;
-            }, {});
-
-            const uniqueCardIds = Object.keys(cardCountMap);
-            const response = await fetch(`${catalogApiUrl}/cartas/ydk`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ deckList: allCardIds })
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Erro ao processar arquivo .ydk');
-
-            alert(`Catálogo atualizado com ${data.total} cartas únicas.`);
-            fetchCatalog();
-
-            if (data.prompt && window.confirm(data.prompt)) {
-                for (const carta of data.disponiveis) {
-                    const qtdDesejada = data.idCount[String(carta.id)] || 1;
-                    const qtdFinal = Math.min(qtdDesejada, carta.quantidade);
-
-                    await fetch(`${carrinhoApiUrl}/carrinho`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            produto_id: carta.id,
-                            quantidade: Number(qtdFinal)
-                        })
-                    });
-                }
-                alert('Cartas disponíveis adicionadas ao carrinho com sucesso!');
-            }
-
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            event.target.value = null;
-            setYdkUploading(false);
-        }
-    };
-
-    reader.onerror = () => {
-        alert("Erro ao ler o arquivo.");
-        event.target.value = null;
-        setYdkUploading(false);
-    };
-
-    reader.readAsText(file);
-};
-
 const handleDeleteCard = async (cardId, cardName) => {
     if (!confirm(`Tem certeza que deseja deletar a carta "${cardName}"?`)) return;
 
@@ -216,21 +136,6 @@ if (error) return <p className="error">{error}</p>;
 
 return (
     <div className="homepage-content">
-
-        <form 
-             id="add-ydk-form"
-             style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
-             <label htmlFor="ydk-upload" style={{ flexShrink: 0 }}>Adicionar por .YDK:</label>
-             <input
-                 type="file"
-                 id="ydk-upload"
-                 accept=".ydk"
-                 onChange={handleYdkUpload}
-                 disabled={ydkUploading}
-                 style={{ flexGrow: 1 }}
-             />
-             {ydkUploading && <span style={{ fontSize: '0.9em' }}>Processando...</span>}
-        </form>
 
         {token && (
             <form 

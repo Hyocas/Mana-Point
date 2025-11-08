@@ -223,23 +223,23 @@ body { display: block; justify-content: normal; align-items: normal; padding: 0;
 .container { display: flex; justify-content: center; align-items: center; padding-top: 4rem; } /* Centraliza login/cadastro */
 
 /* --- Header --- */
-.main-header { background-color: var(--background-light); padding: 1rem 1.5rem; border-bottom: 2px solid var(--accent-gold); position: sticky; top: 0; z-index: 10; }
-.header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
-.header-logo { height: 50px; width: auto; transition: transform 0.2s; }
+.main-header { background-color: var(--background-light); padding: 0 1.5rem; height: 80px; border-bottom: 2px solid var(--accent-gold); position: sticky; top: 0; z-index: 10; }
+.header-content { max-width: 1400px; height: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
+.header-logo { height: 80px; width: auto; transition: transform 0.2s; }
 .header-logo:hover { transform: scale(1.05); }
 
 .header-search-form {
   position: relative;
   display: flex; 
   width: 100%; 
-  max-width: 400px; 
+  max-width: 550px; 
 }
 
 .header-search-form input[type="text"] {
   width: 100%;
   padding-right: 35px; 
   padding-left: 12px;
-  height: 40px;
+  height: 50px;
   border-radius: 8px;
   border: 1px solid var(--background-light);
   background-color: var(--background-dark);
@@ -278,13 +278,51 @@ body { display: block; justify-content: normal; align-items: normal; padding: 0;
 .logout-button-dropdown { width: 100%; text-align: left; background: none; color: var(--text-color); padding: 0.5rem; margin: 0; font-size: 0.9rem; }
 .logout-button-dropdown:hover { background-color: var(--accent-red); color: white; }
 
-
 /* --- Navbar (Abas) --- */
-.main-navbar { background-color: var(--background-medium); padding: 0 1.5rem; border-bottom: 1px solid #000; }
-.main-navbar ul { max-width: 1400px; margin: 0 auto; padding: 0; list-style: none; display: flex; gap: 1rem; }
-.nav-link { display: block; padding: 0.8rem 1rem; color: var(--text-color); font-weight: bold; text-decoration: none; border-bottom: 3px solid transparent; transition: all 0.2s; }
-.nav-link:hover { background-color: rgba(255,255,255,0.05); color: var(--accent-gold); }
-.nav-link.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+.main-navbar {
+    background-color: var(--background-medium);
+    padding: 0 1.5rem;
+}
+
+.main-navbar ul {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+    justify-content: center;
+    padding-block: 0.75rem; 
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-link {
+    display: block;
+    padding: 0.5rem 1.5rem;
+    color: var(--text-color);
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.nav-link:hover {
+    background-color: var(--background-light);
+    color: var(--accent-gold);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+.nav-link.active {
+    background-color: var(--accent-gold);
+    color: var(--background-dark);
+    box-shadow: 0 0 12px 2px rgba(229, 179, 91, 0.4);
+    z-index: 1;
+}
 
 
 /* --- Footer --- */
@@ -292,7 +330,7 @@ body { display: block; justify-content: normal; align-items: normal; padding: 0;
 
 /* --- Placeholders --- */
 .placeholder { opacity: 0.5; cursor: not-allowed; position: relative; }
-.placeholder:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #000; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; white-space: nowrap; z-index: 20; }
+.placeholder:hover::after { content: attr(title); position: absolute; left: 100%; top: 50%; margin-left: 10px; transform: translateX(-50%); background-color: #000; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; white-space: nowrap; z-index: 20; }
 
 /* --- Ajustes Gerais --- */
 button { outline: none; }

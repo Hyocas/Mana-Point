@@ -94,7 +94,7 @@ export default function RegisterPage() {
                     <p>Já tem uma conta? <Link to="/login">Faça o login</Link></p>
                 </div>
                  <div className="switch-link">
-                    <p>Ou <Link to="/catalog">veja o catálogo como visitante</Link></p>
+                    <p>Ou <Link to="/">veja o catálogo como visitante</Link></p>
                 </div>
             </div>
         </div>

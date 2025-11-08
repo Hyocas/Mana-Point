@@ -21,7 +21,7 @@ export default function Navbar() {
         ))}
          <li><span className="nav-link placeholder" title="Em breve!">Magic</span></li>
          <li><span className="nav-link placeholder" title="Em breve!">Pokémon</span></li>
-         <li><span className="nav-link placeholder" title="Em breve!">Mais Produtos</span></li>
+         <li><span className="nav-link placeholder" title="Em breve!">+ Produtos</span></li>
       </ul>
     </nav>
   );

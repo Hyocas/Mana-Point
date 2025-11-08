@@ -26,7 +26,7 @@ export default function LoginPage() {
             }
             
             localStorage.setItem('authToken', data.token);
-            navigate('/catalog');
+            navigate('/');
 
         } catch (err) {
             setError(err.message);
@@ -68,7 +68,7 @@ export default function LoginPage() {
                     <p>Não tem uma conta? <Link to="/register">Cadastre-se</Link></p>
                 </div>
                 <div className="switch-link">
-                    <p>Ou <Link to="/catalog">Veja o catálogo como visitante</Link></p>
+                    <p>Ou <Link to="/">Veja o catálogo como visitante</Link></p>
                 </div>
             </div>
         </div>
