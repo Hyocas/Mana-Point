@@ -43,9 +43,6 @@ export default function RegisterPage() {
                     <img src="/logo-transparente.png" alt="Mana-Point Logo" className="logo-img" />
                 </div>
                 <h1>Cadastro</h1>
-                <p className={`message-area ${error ? 'error' : success ? 'success' : ''}`}>
-                    {error || success}
-                </p>
                 <form id="register-form" onSubmit={handleRegister}>
                     <div className="form-group">
                         <label htmlFor="register-email">Email</label>
@@ -67,6 +64,9 @@ export default function RegisterPage() {
                             required 
                         />
                     </div>
+                    <p className={`message-area ${error ? 'error' : success ? 'success' : ''}`}>
+                    {error || success}
+                    </p>
                     <button type="submit">Cadastrar</button>
                 </form>
                 <div className="switch-link">

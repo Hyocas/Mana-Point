@@ -40,7 +40,6 @@ export default function LoginPage() {
                     <img src="/logo-transparente.png" alt="Mana-Point Logo" className="logo-img" />
                 </div>
                 <h1>Login</h1>
-                <p className={`message-area ${error ? 'error' : ''}`}>{error}</p>
                 <form id="login-form" onSubmit={handleLogin}>
                     <div className="form-group">
                         <label htmlFor="login-email">Email</label>
@@ -62,6 +61,7 @@ export default function LoginPage() {
                             required 
                         />
                     </div>
+                    <p className={`message-area ${error ? 'error' : ''}`}>{error}</p>
                     <button type="submit">Entrar</button>
                 </form>
                 <div className="switch-link">
