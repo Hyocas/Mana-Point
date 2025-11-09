@@ -598,3 +598,65 @@ button:disabled, .placeholder { background-color: #555 !important; cursor: not-a
 .auth-button:hover {
   background-color: #e04a4f;
 }
+@media (max-width: 768px) {
+
+    .main-header {
+        height: auto;
+        padding: 0.75rem 1rem;
+    }
+
+    .header-content {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        position: static;
+    }
+
+    .logo-link {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        order: 1;
+    }
+    
+    .header-logo {
+        height: 50px;
+    }
+
+    .header-search-form {
+        position: relative;
+        transform: none;
+
+        left: auto;
+        top: auto;
+
+        width: 100%;
+        max-width: 100%;
+        order: 2;
+    }
+
+    .header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        order: 3;
+    }
+    
+    .main-navbar ul {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .main-navbar ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-link {
+        min-width: auto;
+        white-space: nowrap; 
+    }
+}
