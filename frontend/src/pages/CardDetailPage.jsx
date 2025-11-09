@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { addToCart } from '../utils/cart';
 
 export default function CardDetailPage() {
     const [carta, setCarta] = useState(null);
@@ -59,47 +60,8 @@ export default function CardDetailPage() {
     };
 
     const handleAddToCart = async () => {
-        console.log('--- Iniciando handleAddToCart ---'); 
-
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            console.error('ERRO: Token não encontrado. O usuário não está logado.');
-            alert('Você precisa estar logado para adicionar itens ao carrinho.');
-            return;
-        }
-        console.log('Token encontrado:', token);
-
-        try {
-            const userId = JSON.parse(atob(token.split('.')[1])).id;
-            console.log(`Dados para a API: userId=${userId}, produtoId=${carta.id}, quantidade=1`);
-
-            const response = await fetch(`${cartApiUrl}/carrinho`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    usuario_id: userId,
-                    produto_id: carta.id,
-                    quantidade: 1
-                })
-            });
-            
-            console.log('Resposta da API recebida:', response);
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro desconhecido da API.');
-            }
-
-            console.log('Sucesso! Carta adicionada:', data);
-            alert(`'${carta.nome}' adicionado ao carrinho!`);
-
-        } catch (error) {
-            console.error('--- ERRO CAPTURADO NO CATCH ---', error);
-            alert(`Falha ao adicionar ao carrinho: ${error.message}`);
-        }
+        if (!carta) return;
+        await addToCart(carta);
     };
     
     if (loading) return <p>Carregando carta...</p>;
@@ -126,7 +88,7 @@ export default function CardDetailPage() {
                 <p className="price">R$ {carta.preco}</p>
                 <button onClick={handleAddToCart} style={{marginTop: '1rem'}}>Adicionar ao Carrinho</button>
                 <br/>
-                <Link to="/catalog">Voltar ao Catálogo</Link>
+                <Link to="/">Voltar ao Catálogo</Link>
             </div>
         </div>
     );

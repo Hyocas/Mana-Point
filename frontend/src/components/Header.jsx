@@ -127,6 +127,7 @@ export default function Header() {
 
   const handleLogout = () => {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('cartItemCount');
       window.location.reload();
   };
 

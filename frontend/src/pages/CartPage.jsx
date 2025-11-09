@@ -171,7 +171,7 @@ export default function CartPage() {
         <div className="catalog-page">
             <div className="catalog-header">
                 <h1>Meu Carrinho</h1>
-                <Link to="/catalog" className="nav-link">Continuar Comprando</Link>
+                <Link to="/" className="nav-link">Continuar Comprando</Link>
             </div>
             {cartItems.length === 0 ? (
                 <p>Seu carrinho está vazio.</p>
