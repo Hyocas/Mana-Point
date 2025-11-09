@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CardDetailPage from './pages/CardDetailPage';
 import CartPage from './pages/CartPage';
+// import AccountPage from './pages/AccountPage';
 
 function App() {
   return (

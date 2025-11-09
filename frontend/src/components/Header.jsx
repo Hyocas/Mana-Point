@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Upload } from 'lucide-react';
+import { Search, ShoppingCart, Upload, User } from 'lucide-react';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -169,10 +169,10 @@ export default function Header() {
         </form>
         
         <div className="header-actions style-b">
-           {token ? (
-             <button onClick={handleLogout} className="auth-button">Sair</button>
-           ) : (
-             <button onClick={() => navigate('/login')} className="auth-button">Entrar</button>
+           {token && (
+            <Link to="/minha-conta" className="action-item" title="Minha Conta">
+              <User size={24} />
+            </Link>
            )}
 
            {token && (
@@ -205,6 +205,12 @@ export default function Header() {
               {localStorage.getItem('cartItemCount') || 0}
             </span>
           </Link>
+
+          {token ? (
+             <button onClick={handleLogout} className="auth-button">Sair</button>
+           ) : (
+             <button onClick={() => navigate('/login')} className="auth-button">Entrar</button>
+           )}
         </div>
       </div>
     </header>
