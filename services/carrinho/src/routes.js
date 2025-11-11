@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
-const { jwtDecode } = require('jwt-decode');
 
 const validarToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -12,18 +11,18 @@ const validarToken = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
-        const decodedToken = jwtDecode(token);
-        const usuarioId = decodedToken.id;
+        const response = await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
 
-        if (!usuarioId) {
-            throw new Error('ID do usuário ausente no token.');
+        if (response.data.valido && response.data.usuario && response.data.usuario.id) {
+            req.usuarioId = response.data.usuario.id;
+            next();
+        } else {
+            throw new Error('Serviço de autenticação não retornou um usuário válido.');
         }
-        req.usuarioId = usuarioId;
-        next();
+
     } catch (error) {
         const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
-        console.error(`[validarToken] Erro na validação/decodificação: ${errorMessage}`);
+        console.error(`[validarToken] Erro na validação: ${errorMessage}`);
         return res.status(401).json({ message: 'Acesso não autorizado. Token inválido ou erro interno na validação.' });
     }
 };
@@ -46,8 +45,8 @@ router.post('/carrinho', validarToken, async (req, res) => {
         await client.query('BEGIN');
         console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Transação iniciada para produtoId: ${produto_id}`);
 
-        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Verificando estoque/preço (com lock) para produtoId: ${produto_id}...`);
-        const cartaQuery = 'SELECT preco, quantidade FROM cartas WHERE id = $1 FOR UPDATE';
+        console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Verificando estoque/preço (sem lock) para produtoId: ${produto_id}...`);
+        const cartaQuery = 'SELECT preco, quantidade FROM cartas WHERE id = $1';
         const cartaResult = await client.query(cartaQuery, [produto_id]);
 
         if (cartaResult.rows.length === 0 ) {
@@ -73,16 +72,18 @@ router.post('/carrinho', validarToken, async (req, res) => {
         if (itemExistente.rows.length > 0) {
             const existingItem = itemExistente.rows[0];
             const novaQuantidade = existingItem.quantidade + quantidade;
+
+            if (estoqueAtual < novaQuantidade) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({message: `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`});
+            }
+
             const updateQuery = 'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
             resultCarrinho = await client.query(updateQuery, [novaQuantidade, preco_unitario, existingItem.id]);
         } else { 
             const insertQuery = 'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
             resultCarrinho = await client.query(insertQuery, [usuarioId, produto_id, quantidade, preco_unitario]);
         }
-
-        const novoEstoque = estoqueAtual - quantidade;
-        const updateEstoqueQuery = 'UPDATE cartas SET quantidade = $1 WHERE id = $2';
-        await client.query(updateEstoqueQuery, [novoEstoque, produto_id]);
 
         await client.query('COMMIT');
         console.log(`[POST /carrinho] - UsuarioId: ${usuarioId}, Transação concluída com sucesso para produtoId: ${produto_id}`);
@@ -146,68 +147,34 @@ router.put('/carrinho/:item_id', validarToken, async (req, res) => {
 
         const itemAntigo = itemResult.rows[0];
         const produtoId = itemAntigo.produto_id;
-        const quantidadeAntiga = itemAntigo.quantidade;
-        const diferencaQuantidade = novaQuantidade - quantidadeAntiga;
+        
+        const cartaQuery = 'SELECT quantidade FROM cartas WHERE id = $1';
+        const cartaResult = await client.query(cartaQuery, [produtoId]);
 
-        let estoqueAtual;
-        if (diferencaQuantidade !== 0) {
-            const cartaQuery = 'SELECT quantidade FROM cartas WHERE id = $1 FOR UPDATE';
-            const cartaResult = await client.query(cartaQuery, [produtoId]);
-
-            if (cartaResult.rows.length === 0) {
-                console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO CRÍTICO: ProdutoId ${produtoId} não encontrado durante verificação de estoque.`);
-                await client.query('ROLLBACK');
-                return res.status(500).json({ message: 'Erro: Produto associado ao carrinho não encontrado no catálogo.' });
-            }
-            estoqueAtual = cartaResult.rows[0].quantidade;
-
-            if (diferencaQuantidade > 0 && estoqueAtual < diferencaQuantidade) {
-                console.warn(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, Estoque insuficiente para produtoId: ${produtoId}. Necessário: ${diferencaQuantidade}, Disponível: ${estoqueAtual}`);
-                await client.query('ROLLBACK');
-                return res.status(400).json({ message: `Estoque insuficiente. Apenas ${estoqueAtual} unidades adicionais disponíveis.` });
-            }
+        if (cartaResult.rows.length === 0) {
+            console.error(`[PUT /carrinho/:item_id] - ERRO CRÍTICO: ProdutoId ${produtoId} não encontrado.`);
+            await client.query('ROLLBACK');
+            return res.status(500).json({ message: 'Erro: Produto associado ao carrinho não encontrado no catálogo.' });
         }
+        
+        const estoqueAtual = cartaResult.rows[0].quantidade;
 
+        if (novaQuantidade > estoqueAtual) {
+            console.warn(`[PUT /carrinho/:item_id] - Estoque insuficiente. Solicitado: ${novaQuantidade}, Disponível: ${estoqueAtual}`);
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: `Estoque insuficiente. Apenas ${estoqueAtual} unidades disponíveis.` });
+        }
+        
         const updateCarrinhoQuery = 'UPDATE carrinho_itens SET quantidade = $1 WHERE id = $2 AND usuario_id = $3 RETURNING *';
         const resultCarrinho = await client.query(updateCarrinhoQuery, [novaQuantidade, item_id, usuarioId]);
-
-        if (resultCarrinho.rows.length === 0) {
-            console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, Falha ao atualizar itemId: ${item_id} após lock (inesperado).`);
-            await client.query('ROLLBACK');
-            return res.status(500).json({ message: 'Erro inesperado ao atualizar item do carrinho.' });
-        }
-
-        if (diferencaQuantidade !== 0) {
-            let estoqueAntesDoAjuste = estoqueAtual;
-            if (estoqueAntesDoAjuste === undefined) {
-                 const estoqueAtualResult = await client.query('SELECT quantidade FROM cartas WHERE id = $1', [produtoId]);
-                 if (estoqueAtualResult.rows.length === 0) {
-                      console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO CRÍTICO: ProdutoId ${produtoId} não encontrado durante ajuste de estoque para decremento.`);
-                      await client.query('ROLLBACK');
-                      return res.status(500).json({ message: 'Erro: Produto associado ao carrinho não encontrado no catálogo para ajustar estoque.' });
-                 }
-                 estoqueAntesDoAjuste = estoqueAtualResult.rows[0].quantidade;
-            }
-
-            const novoEstoqueCalculado = estoqueAntesDoAjuste - diferencaQuantidade;
-
-            if (novoEstoqueCalculado < 0) {
-                 console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} - ERRO LÓGICO: Tentativa de deixar estoque negativo (${novoEstoqueCalculado}) para produtoId: ${produtoId}.`);
-                 await client.query('ROLLBACK');
-                 return res.status(500).json({ message: 'Erro interno: Cálculo resultou em estoque negativo.' });
-            }
-
-            const updateEstoqueQuery = 'UPDATE cartas SET quantidade = $1 WHERE id = $2';
-            await client.query(updateEstoqueQuery, [novoEstoqueCalculado, produtoId]);
-        }
-
+        
         await client.query('COMMIT');
-        console.log(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} atualizado para qtd ${novaQuantidade}. Estoque ajustado.`);
+        console.log(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, itemId: ${item_id} atualizado para qtd ${novaQuantidade}.`);
 
         return res.status(200).json(resultCarrinho.rows[0]);
 
     } catch (error) {
-        console.error(`[PUT /carrinho/:item_id] - UsuarioId: ${usuarioId}, ERRO na transação para itemId: ${item_id}: ${error.message}`, error.stack);
+        console.error(`[PUT /carrinho/:item_id] - ERRO na transação: ${error.message}`, error.stack);
         await client.query('ROLLBACK');
         return res.status(500).json({ message: 'Erro interno do servidor ao processar atualização do carrinho.' });
     } finally {
@@ -230,28 +197,21 @@ router.delete('/carrinho/:item_id', validarToken, async (req, res) => {
         const itemResult = await client.query(itemQuery, [item_id, usuarioId]);
 
         if (itemResult.rows.length === 0) {
-            console.warn(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ItemId: ${item_id} não encontrado ou não pertence ao usuário (404).`);
+            console.warn(`[DELETE /carrinho/:item_id] - ItemId: ${item_id} não encontrado (404).`);
             await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Item do carrinho não encontrado ou não pertence a este usuário.' });
         }
 
-        const itemParaRemover = itemResult.rows[0];
-        const produtoId = itemParaRemover.produto_id;
-        const quantidadeParaDevolver = itemParaRemover.quantidade;
-
         const deleteQuery = 'DELETE FROM carrinho_itens WHERE id = $1 AND usuario_id = $2';
         await client.query(deleteQuery, [item_id, usuarioId]);
-
-        const updateEstoqueQuery = 'UPDATE cartas SET quantidade = quantidade + $1 WHERE id = $2';
-        await client.query(updateEstoqueQuery, [quantidadeParaDevolver, produtoId]);
-
+        
         await client.query('COMMIT');
 
-        console.log(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ItemId: ${item_id} removido e ${quantidadeParaDevolver} unidade(s) do ProdutoId: ${produtoId} devolvidas ao estoque com sucesso.`);
+        console.log(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ItemId: ${item_id} removido do carrinho com sucesso.`);
         return res.status(204).send();
 
     } catch (error) {
-        console.error(`[DELETE /carrinho/:item_id] - UsuarioId: ${usuarioId}, ERRO na transação para itemId: ${item_id}: ${error.message}`, error.stack);
+        console.error(`[DELETE /carrinho/:item_id] - ERRO: ${error.message}`, error.stack);
         await client.query('ROLLBACK');
         return res.status(500).json({ message: 'Erro interno do servidor ao processar remoção do carrinho.' });
     } finally {
