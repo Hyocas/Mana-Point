@@ -50,6 +50,21 @@ services:
       - usuarios_api
       - catalogo_api
 
+  pagamento_api:
+    build: ./services/pagamento
+    ports:
+     - "3003:3000"
+    environment:
+      DB_HOST: ${DB_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DB_SSL: ${DB_SSL}
+    depends_on:
+      - usuarios_api
+      - catalogo_api
+      - carrinho_api
+
   ### ferramentas ###
   all_migrations:
     build: ./services/migrator
