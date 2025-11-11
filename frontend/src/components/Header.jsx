@@ -54,7 +54,7 @@ export default function Header() {
             if (!response.ok) throw new Error(data.message || 'Erro ao processar arquivo .ydk');
 
             alert(`Catálogo atualizado com ${data.total} cartas únicas.`);
-            navigate(0); 
+            //navigate(0); 
 
             if (data.prompt && window.confirm(data.prompt)) {
                 for (const carta of data.disponiveis) {
@@ -74,6 +74,8 @@ export default function Header() {
                     });
                 }
                 alert('Cartas disponíveis adicionadas ao carrinho com sucesso!');
+
+                navigate(0);
             }
 
         } catch (err) {
