@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Upload, User } from 'lucide-react';
 
@@ -6,6 +6,7 @@ export default function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [searchTerm, setSearchTerm] = useState('');
+  const [cartCount, setCartCount] = useState(() => Number(localStorage.getItem('cartItemCount') || 0));
 
   const catalogApiUrl = '/api/catalogo_proxy';
   const carrinhoApiUrl = '/api/carrinho_proxy';
@@ -54,7 +55,6 @@ export default function Header() {
             if (!response.ok) throw new Error(data.message || 'Erro ao processar arquivo .ydk');
 
             alert(`Catálogo atualizado com ${data.total} cartas únicas.`);
-            //navigate(0); 
 
             if (data.prompt && window.confirm(data.prompt)) {
                 for (const carta of data.disponiveis) {
@@ -142,6 +142,15 @@ export default function Header() {
     }
   }
 
+  // Ouve atualizações do carrinho para atualizar o badge em tempo real
+  useEffect(() => {
+    const onCartUpdated = () => {
+      setCartCount(Number(localStorage.getItem('cartItemCount') || 0));
+    };
+    window.addEventListener('cartUpdated', onCartUpdated);
+    return () => window.removeEventListener('cartUpdated', onCartUpdated);
+  }, []);
+
   return (
     <header className="main-header style-b">
       <input
@@ -204,7 +213,7 @@ export default function Header() {
           <Link to="/carrinho" className="action-item" title="Ver Carrinho">
             <ShoppingCart size={24} />           
             <span className="cart-count">
-              {localStorage.getItem('cartItemCount') || 0}
+              {cartCount}
             </span>
           </Link>
 

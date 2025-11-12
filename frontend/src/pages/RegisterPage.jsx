@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import Footer from '../components/Footer.jsx';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -48,6 +49,7 @@ export default function RegisterPage() {
     };
 
     return (
+        <>
         <div className="container">
             <div className="auth-card">
                 <div className="logo-container">
@@ -98,5 +100,7 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+        <Footer />
+        </>
     );
 }

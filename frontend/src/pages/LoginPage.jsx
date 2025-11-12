@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import Footer from '../components/Footer.jsx';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -34,6 +35,7 @@ export default function LoginPage() {
     };
 
     return (
+        <>
         <div className="container">
             <div className="auth-card">
                 <div className="logo-container">
@@ -72,5 +74,7 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+        <Footer />
+        </>
     );
 }

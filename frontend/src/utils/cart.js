@@ -35,13 +35,28 @@ export const addToCart = async (carta) => {
 
     alert(`'${carta.nome}' adicionado ao carrinho!`);
 
-    const currentCount = Number(localStorage.getItem('cartItemCount') || 0);
-    const newCount = currentCount + 1;
-    localStorage.setItem('cartItemCount', newCount);
-    
-    window.dispatchEvent(new Event('cartUpdated'));
+  // Atualiza o badge usando a função utilitária centralizada
+  updateCartCount(1);
 
   } catch (error) {
     alert(`Falha ao adicionar ao carrinho: ${error.message}`);
   }
 };
+
+/**
+ * Atualiza o contador global do carrinho aplicando um delta (positivo ou negativo).
+ * @param {number} delta 
+ * @returns {number}
+ */
+export const updateCartCount = (delta = 0) => {
+  const current = Number(localStorage.getItem('cartItemCount') || 0);
+  const next = Math.max(0, current + Number(delta || 0));
+  localStorage.setItem('cartItemCount', next);
+  window.dispatchEvent(new Event('cartUpdated'));
+  return next;
+};
+
+/**
+ * @param {number} qty Quantidade a remover do contador (>= 0)
+ */
+export const removeFromCartCount = (qty = 1) => updateCartCount(-Math.abs(qty));

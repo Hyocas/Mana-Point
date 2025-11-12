@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { updateCartCount } from '../utils/cart';
 
 export default function CartPage() {
     const [cartItems, setCartItems] = useState([]);
@@ -81,6 +82,13 @@ export default function CartPage() {
             });
 
             setCartItems(enrichedItems);
+
+            try {
+                const totalCount = enrichedItems.reduce((sum, it) => sum + (Number(it.quantidade) || 0), 0);
+                const current = Number(localStorage.getItem('cartItemCount') || 0);
+                updateCartCount(totalCount - current);
+            } catch (_) {
+            }
         } catch (err) {
             setError(err.message);
             setCartItems([]);
@@ -102,6 +110,8 @@ export default function CartPage() {
         }
 
         try {
+            const currentItem = cartItems.find(i => i.cartItemId === itemId);
+            const oldQuantity = currentItem ? Number(currentItem.quantidade) || 0 : 0;
             const response = await fetch(`${cartApiUrl}/carrinho/${itemId}`, {
                 method: 'PUT',
                 headers: {
@@ -122,6 +132,7 @@ export default function CartPage() {
                 throw new Error(errorMsg);
             }
 
+            updateCartCount((Number(newQuantity) || 0) - oldQuantity);
             fetchCart();
         } catch (err) {
             alert(`Erro ao atualizar a quantidade: ${err.message}`);
@@ -138,6 +149,8 @@ export default function CartPage() {
         setRemovingItemId(itemId);
 
         try {
+            const removedItem = originalCartItems.find(i => i.cartItemId === itemId);
+            const removedQty = removedItem ? Number(removedItem.quantidade) || 0 : 0;
             const response = await fetch(`${cartApiUrl}/carrinho/${itemId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -153,6 +166,8 @@ export default function CartPage() {
                 }
                 throw new Error(errorMsg);
             }
+
+            if (removedQty > 0) updateCartCount(-removedQty);
 
         } catch (err) {
             alert(`Erro ao remover o item: ${err.message}`);
