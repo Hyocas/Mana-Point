@@ -90,4 +90,99 @@ console.log('--- CHAVE SECRETA CARREGADA ---');
 console.log('Valor de JWT_SECRET:', process.env.JWT_SECRET);
 console.log('-----------------------------');
 
+router.post('/funcionarios/registro', async (req, res) => {
+    const { email, senha, codigoSeguranca } = req.body;
+
+    if (!email || !senha || !codigoSeguranca) {
+        return res.status(400).json({ message: "Email, senha e código de segurança são obrigatórios." });
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const senhaHash = await bcrypt.hash(senha, salt);
+
+        const codigoHash = await bcrypt.hash(codigoSeguranca, salt);
+
+        const query = `
+            INSERT INTO funcionarios (email, senha_hash, codigo_seguranca_hash)
+            VALUES ($1, $2, $3)
+            RETURNING id, email
+        `;
+
+        const result = await db.query(query, [email, senhaHash, codigoHash]);
+
+        res.status(201).json({
+            message: "Funcionário registrado com sucesso!",
+            funcionario: result.rows[0]
+        });
+
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(409).json({ message: "Este e-mail já está em uso por outro funcionário." });
+        }
+        console.error("Erro ao registrar funcionário:", error);
+        res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+
+router.post('/funcionarios/login', async (req, res) => {
+    const { email, senha, codigoSeguranca } = req.body;
+
+    if (!email || !senha || !codigoSeguranca) {
+        return res.status(400).json({ message: "Email, senha e código de segurança são obrigatórios." });
+    }
+
+    try {
+        const result = await db.query("SELECT * FROM funcionarios WHERE email = $1", [email]);
+        const funcionario = result.rows[0];
+
+        if (!funcionario) {
+            return res.status(401).json({ message: "Credenciais inválidas." });
+        }
+
+        const senhaValida = await bcrypt.compare(senha, funcionario.senha_hash);
+        const codigoValido = await bcrypt.compare(codigoSeguranca, funcionario.codigo_seguranca_hash);
+
+        if (!senhaValida || !codigoValido) {
+            return res.status(401).json({ message: "Credenciais inválidas." });
+        }
+
+        const token = jwt.sign(
+            {
+                id: funcionario.id,
+                email: funcionario.email,
+                cargo: "funcionario"
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "2h" }
+        );
+
+        res.status(200).json({ message: "Login de funcionário bem-sucedido!", token });
+
+    } catch (error) {
+        console.error("Erro no login do funcionário:", error);
+        res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+
+router.post('/funcionarios/validar-token', (req, res) => {
+    const { token } = req.body;
+
+    if (!token) return res.status(400).json({ valido: false });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.cargo !== "funcionario") {
+            return res.status(403).json({ valido: false, message: "Token não pertence a funcionário." });
+        }
+
+        res.status(200).json({ valido: true, funcionario: decoded });
+
+    } catch (error) {
+        console.error("Erro ao validar token:", error);
+        res.status(401).json({ valido: false, message: "Token inválido." });
+    }
+});
+
 module.exports = router;
