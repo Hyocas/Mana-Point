@@ -15,6 +15,8 @@ const validarToken = async (req, res, next) => {
 
         if (response.data.valido && response.data.usuario && response.data.usuario.id) {
             req.usuarioId = response.data.usuario.id;
+
+            req.usuarioCargo = response.data.usuario.cargo;
             next();
         } else {
             throw new Error('Serviço de autenticação não retornou um usuário válido.');
@@ -29,6 +31,11 @@ const validarToken = async (req, res, next) => {
 
 router.post('/carrinho', validarToken, async (req, res) => {
     const usuarioId = req.usuarioId;
+
+    if (req.usuarioCargo === 'funcionario') {
+        return res.status(403).json({ message: 'Funcionários não podem realizar compras. Entre com uma conta de cliente.' });
+    }
+
     const { produto_id, quantidade } = req.body;
 
     if (!usuarioId || !produto_id || quantidade == null) {
@@ -103,7 +110,12 @@ router.post('/carrinho', validarToken, async (req, res) => {
 
 router.get('/carrinho/:usuario_id_param', validarToken, async (req, res) => {
     const usuarioId = req.usuarioId;
+    const usuarioCargo = req.usuarioCargo;
     const { usuario_id_param } = req.params;
+
+    if (usuarioCargo === 'funcionario') {
+        return res.status(403).json({ message: 'Funcionários não possuem acesso ao carrinho.' });
+    }
 
     if (String(usuarioId) !== usuario_id_param) {
          return res.status(403).json({ message: 'Acesso proibido. Você só pode acessar seu próprio carrinho.' });
