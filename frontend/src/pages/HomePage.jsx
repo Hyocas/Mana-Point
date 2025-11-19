@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import * as jwtDecodeModule from 'jwt-decode';
-const jwtDecode = jwtDecodeModule && jwtDecodeModule.default ? jwtDecodeModule.default : jwtDecodeModule;
+import { jwtDecode } from 'jwt-decode';
 
 export default function HomePage() {
     const [cartas, setCartas] = useState([]);
@@ -20,10 +19,15 @@ export default function HomePage() {
 
     // ---------------- Funcionário ----------------
     let isFuncionario = false;
+    console.log("Token encontrado:", token);
+
     if (token) {
         try {
             const decoded = jwtDecode(token);
+            console.log("Token decodificado:", decoded);
+
             isFuncionario = decoded.cargo === "funcionario";
+            console.log("É funcionário?", isFuncionario);
         } catch (err) {
             console.warn("Token inválido ou malformado.");
         }

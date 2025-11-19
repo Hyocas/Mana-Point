@@ -56,7 +56,11 @@ router.post('/usuarios/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: usuario.id, email: usuario.email },
+            { 
+                id: usuario.id, 
+                email: usuario.email,
+                cargo: "usuario" 
+            },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         )
@@ -154,7 +158,7 @@ router.post('/funcionarios/login', async (req, res) => {
                 cargo: "funcionario"
             },
             process.env.JWT_SECRET,
-            { expiresIn: "2h" }
+            { expiresIn: '1h' }
         );
 
         res.status(200).json({ message: "Login de funcionário bem-sucedido!", token });
