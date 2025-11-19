@@ -99,43 +99,76 @@ router.get('/cartas/search', async (req, res) => {
     }
 
     try {
-        const result = await db.query(
+        const resultNome = await db.query(
             'SELECT * FROM cartas WHERE nome ILIKE $1',
             [`%${nome}%`]
         );
 
-        if (result.rows.length > 0) {
-            return res.status(200).json(result.rows);
+        let cartaAdicionadaViaAPI = null;
+
+        if (resultNome.rows.length === 0) {
+            try {
+                const apiRes = await axios.get(
+                    `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&format=tcg`
+                );
+
+                if (apiRes.data?.data?.length > 0) {
+                    const carta = apiRes.data.data[0];
+
+                    const nomeCarta = carta.name;
+                    const id = carta.id || null;
+                    const tipo = carta.type || null;
+                    const ataque = carta.atk || null;
+                    const defesa = carta.def || null;
+                    const efeito = carta.desc || null;
+                    const preco = carta.card_prices?.[0]?.cardmarket_price * 5.37 || 0;
+                    const imagemUrl = carta.card_images?.[0]?.image_url || null;
+                    const quantidade = 0;
+
+                    const insert = await db.query(
+                        `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                         RETURNING *`,
+                        [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
+                    );
+
+                    cartaAdicionadaViaAPI = insert.rows[0];
+                }
+
+            } catch (err) {
+                console.warn("[YGOProDeck] Nenhuma carta encontrada na API.");
+            }
         }
 
-        const apiRes = await axios.get(
-            `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&format=tcg`
+        const resultEfeito = await db.query(
+            `SELECT * FROM cartas 
+             WHERE efeito ILIKE $1`,
+            [`%${nome}%`]
         );
 
-        if (!apiRes.data.data || apiRes.data.data.length === 0) {
-            return res.status(404).json({ message: 'Carta não encontrada na API YGOProDeck.' });
+        const respostas = [];
+
+        if (resultNome.rows.length > 0) {
+            respostas.push(...resultNome.rows);
         }
 
-        const carta = apiRes.data.data[0];
+        if (cartaAdicionadaViaAPI) {
+            respostas.push(cartaAdicionadaViaAPI);
+        }
 
-        const nomeCarta = carta.name;
-        const id = carta.id || null;
-        const tipo = carta.type || null;
-        const ataque = carta.atk || null;
-        const defesa = carta.def || null;
-        const efeito = carta.desc || null;
-        const preco = carta.card_prices?.[0]?.cardmarket_price * 5.37 || 0;
-        const imagemUrl = carta.card_images?.[0]?.image_url || null;
-        const quantidade = 0;
+        const idsExistentes = new Set(respostas.map(c => c.id));
+        for (const row of resultEfeito.rows) {
+            if (!idsExistentes.has(row.id)) {
+                respostas.push(row);
+            }
+        }
 
-        const insert = await db.query(
-            `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             RETURNING *`,
-            [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade]
-        );
+        if (respostas.length === 0) {
+            return res.status(404).json({ message: 'Nenhuma carta encontrada.' });
+        }
 
-        return res.status(201).json(insert.rows);
+        return res.status(200).json(respostas);
+
     } catch (error) {
         console.error('[catalogo_api] Erro na rota /cartas/search:', error.message);
         if (error.response) {
