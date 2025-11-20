@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Upload, User } from 'lucide-react';
+import { Search, ShoppingCart, Upload, User, Monitor, Moon, Sun } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext.jsx';
+
+const iconFor = (theme) => theme === 'light' ? <Sun size={18} /> : theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />;
 
 export default function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [searchTerm, setSearchTerm] = useState('');
   const [cartCount, setCartCount] = useState(() => Number(localStorage.getItem('cartItemCount') || 0));
+  const { theme, setTheme } = useTheme();
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const catalogApiUrl = '/api/catalogo_proxy';
   const carrinhoApiUrl = '/api/carrinho_proxy';
@@ -178,8 +183,30 @@ export default function Header() {
                 <Search size={15} />
             </button>
         </form>
-        
         <div className="header-actions style-b">
+          <div className="dropdown" style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="action-item icon-action"
+              onClick={() => setThemeOpen(o => !o)}
+              title={`Tema: ${theme}`}
+            >
+              {iconFor(theme)}
+            </button>
+            {themeOpen && (
+              <div className="dropdown-content" style={{ right: 0, left: 'auto' }}>
+                <button className="logout-button-dropdown" onClick={() => { setTheme('classic'); setThemeOpen(false); }}>
+                  {iconFor('classic')} Clássico
+                </button>
+                <button className="logout-button-dropdown" onClick={() => { setTheme('dark'); setThemeOpen(false); }}>
+                  {iconFor('dark')} Escuro
+                </button>
+                <button className="logout-button-dropdown" onClick={() => { setTheme('light'); setThemeOpen(false); }}>
+                  {iconFor('light')} Claro
+                </button>
+              </div>
+            )}
+          </div>
            {token && (
             <Link to="/minha-conta" className="action-item" title="Minha Conta">
               <User size={24} />

@@ -276,7 +276,9 @@ body { display: block; justify-content: normal; align-items: normal; padding: 0;
 .action-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-color); text-decoration: none; font-weight: bold; transition: color 0.2s; position: relative; } /* Adicionado position relative para dropdown */
 .action-item:hover { color: var(--accent-gold); }
 .action-text { font-size: 0.9rem; }
-/* Dropdown (simples) */
+.icon-action { background: transparent !important; border: none !important; padding: 0 !important; width: auto !important; min-width: auto; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.icon-action svg { width: 24px; height: 24px; display: block; }
+.icon-action svg { transform: translateY(-4px); }
 .dropdown .dropdown-content { display: none; position: absolute; top: 100%; right: 0; background-color: var(--background-light); border: 1px solid var(--background-medium); border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); padding: 0.5rem; min-width: 100px; }
 .dropdown:hover .dropdown-content { display: block; }
 .logout-button-dropdown { width: 100%; text-align: left; background: none; color: var(--text-color); padding: 0.5rem; margin: 0; font-size: 0.9rem; }
@@ -534,6 +536,45 @@ button:disabled, .placeholder { background-color: #555 !important; cursor: not-a
 
 .auth-button:hover {
   background-color: var(--brand-accent-hover);
+}
+
+.card-detail-page { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; color: var(--text-color); font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.card-detail-back { margin-bottom: 2rem; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.95rem; color: var(--accent-gold); background: var(--background-medium); padding: 0.55rem 0.85rem; border-radius: 8px; border: 1px solid var(--background-light); box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all .2s; }
+.back-link:hover { background: var(--background-light); text-decoration: none; transform: translateY(-2px); }
+
+.card-detail-layout { display: flex; flex-wrap: wrap; gap: 4rem; align-items: flex-start; }
+.card-detail-image-section { flex: 1 1 350px; display: flex; flex-direction: column; align-items: center; position: relative; }
+.card-detail-img { width: 100%; max-width: 320px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); transition: transform .3s ease; }
+.card-detail-img:hover { transform: translateY(-4px); }
+
+.card-action-block { margin-top: 1.5rem; width: 100%; max-width: 320px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; }
+.price-display { font-size: 1.6rem; font-weight: 800; line-height: 1; white-space: nowrap; }
+.buy-btn { flex: 1; padding: 12px 15px; background: var(--brand-accent); color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: .2s; margin: 0; }
+.buy-btn:not(:disabled):hover { background: var(--brand-accent-hover); }
+.buy-btn:disabled { background: #555; opacity: .6; cursor: not-allowed; }
+
+.card-info-section { flex: 1 1 450px; display: flex; flex-direction: column; gap: 1.5rem; }
+.card-info-header { border-bottom: 2px solid var(--background-light); padding-bottom: 1rem; margin-bottom: 1rem; }
+.card-subtitle { font-size: 1.1rem; color: var(--brand-accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.card-title-gradient { font-size: 3rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin: 0.5rem 0; background: linear-gradient(90deg, var(--text-color), var(--muted-text)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
+.stats-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.stat-badge { display: flex; align-items: center; gap: 8px; background: var(--background-medium); border: 1px solid var(--background-light); padding: 10px 16px; border-radius: 50px; font-size: 1rem; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.stat-badge span { display: inline-flex; align-items: center; line-height: 1; }
+.stat-badge svg { display: block; }
+.stat-badge.in-stock { background: #f0fff4; border-color: #68d391; color: #2f855a; }
+.stat-badge.out-stock { background: #fff5f5; border-color: #fc8181; color: #c53030; }
+.details-heading { font-size: 1.1rem; margin-bottom: 0.8rem; font-weight: 600; color: var(--muted-text); }
+.description-box { background: var(--background-dark); padding: 1.5rem; border-radius: 12px; line-height: 1.8; font-size: 1.05rem; }
+
+@media (max-width: 900px) {
+  .card-title-gradient { font-size: 2.6rem; }
+  .card-detail-layout { gap: 2.5rem; }
+}
+@media (max-width: 600px) {
+  .card-title-gradient { font-size: 2.2rem; }
+  .card-action-block { max-width: 280px; }
+  .price-display { font-size: 1.4rem; }
 }
 @media (max-width: 768px) {
 
