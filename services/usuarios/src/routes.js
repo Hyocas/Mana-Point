@@ -3,20 +3,26 @@ const router = express.Router();
 const db = require('./db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const CHAVE_MESTRA_LOJA = process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA";
+
+if (!CHAVE_MESTRA_LOJA) {
+    console.error("ERRO FATAL: A variável CHAVE_MESTRA_LOJA não está definida no arquivo .env");
+    process.exit(1);
+}
 
 router.post('/usuarios/registro', async (req, res) => {
-    const { email, senha } = req.body;
+    const { email, senha, nomeCompleto, dataNascimento, endereco, cpf } = req.body;
 
-    if (!email || !senha){
-        return res.status(400).json({ message: "Email e senhas são obrigatórios."});
+    if (!email || !senha || !nomeCompleto || !cpf){
+        return res.status(400).json({ message: "Preencha todos os campos obrigatórios."});
     }
 
     try {
         const salt = await bcrypt.genSalt(10);
         const senhaHash = await bcrypt.hash(senha, salt);
 
-        const queryInserir = 'INSERT INTO usuarios(email, senha_hash) VALUES($1, $2) RETURNING id, email';
-        const queryRetorno = [email, senhaHash];
+        const queryInserir = 'INSERT INTO usuarios(email, senha_hash, nome_completo, data_nascimento, endereco, cpf) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, email, nome_completo';
+        const queryRetorno = [email, senhaHash, nomeCompleto, dataNascimento, endereco, cpf];
 
         const queryResultado = await db.query(queryInserir, queryRetorno);
         const novoUsuario = queryResultado.rows[0];
@@ -27,7 +33,7 @@ router.post('/usuarios/registro', async (req, res) => {
         });
     } catch (error) {
         if (error.code === '23505') { 
-            return res.status(409).json({ message: 'Este e-mail já está em uso.' });
+            return res.status(409).json({ message: 'Este e-mail ou CPF já está em uso.' });
         }
         console.error('Erro ao registrar usuário:', error);
         res.status(500).json({ message: 'Erro interno do servidor.' });
@@ -95,25 +101,24 @@ console.log('Valor de JWT_SECRET:', process.env.JWT_SECRET);
 console.log('-----------------------------');
 
 router.post('/funcionarios/registro', async (req, res) => {
-    const { email, senha, codigoSeguranca } = req.body;
+    const { email, senha, codigoSeguranca, nomeCompleto, dataNascimento, endereco, cpf } = req.body;
 
-    if (!email || !senha || !codigoSeguranca) {
-        return res.status(400).json({ message: "Email, senha e código de segurança são obrigatórios." });
+    if (!email || !senha || !codigoSeguranca || !nomeCompleto || !cpf ) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios." });
+    }
+
+    if (codigoSeguranca !== CHAVE_MESTRA_LOJA) {
+        return res.status(403).json({ message: "Código de segurança da loja incorreto. Você não tem permissão para registrar uma conta de funcionário." });
     }
 
     try {
-        const salt = await bcrypt.genSalt(10);
-        const senhaHash = await bcrypt.hash(senha, salt);
-
-        const codigoHash = await bcrypt.hash(codigoSeguranca, salt);
-
         const query = `
-            INSERT INTO funcionarios (email, senha_hash, codigo_seguranca_hash)
-            VALUES ($1, $2, $3)
-            RETURNING id, email
+            INSERT INTO funcionarios (email, senha_hash, nome_completo, data_nascimento, endereco, cpf)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, email, nome_completo
         `;
 
-        const result = await db.query(query, [email, senhaHash, codigoHash]);
+        const result = await db.query(query, [email, senhaHash, nomeCompleto, dataNascimento, endereco, cpf]);
 
         res.status(201).json({
             message: "Funcionário registrado com sucesso!",
@@ -122,7 +127,7 @@ router.post('/funcionarios/registro', async (req, res) => {
 
     } catch (error) {
         if (error.code === '23505') {
-            return res.status(409).json({ message: "Este e-mail já está em uso por outro funcionário." });
+            return res.status(409).json({ message: "Este E-mail ou CPF já está em uso por outro funcionário." });
         }
         console.error("Erro ao registrar funcionário:", error);
         res.status(500).json({ message: "Erro interno do servidor." });
@@ -130,10 +135,10 @@ router.post('/funcionarios/registro', async (req, res) => {
 });
 
 router.post('/funcionarios/login', async (req, res) => {
-    const { email, senha, codigoSeguranca } = req.body;
+    const { email, senha } = req.body;
 
-    if (!email || !senha || !codigoSeguranca) {
-        return res.status(400).json({ message: "Email, senha e código de segurança são obrigatórios." });
+    if (!email || !senha) {
+        return res.status(400).json({ message: "Email e senha e são obrigatórios." });
     }
 
     try {
@@ -145,9 +150,8 @@ router.post('/funcionarios/login', async (req, res) => {
         }
 
         const senhaValida = await bcrypt.compare(senha, funcionario.senha_hash);
-        const codigoValido = await bcrypt.compare(codigoSeguranca, funcionario.codigo_seguranca_hash);
 
-        if (!senhaValida || !codigoValido) {
+        if (!senhaValida) {
             return res.status(401).json({ message: "Credenciais inválidas." });
         }
 
@@ -155,7 +159,8 @@ router.post('/funcionarios/login', async (req, res) => {
             {
                 id: funcionario.id,
                 email: funcionario.email,
-                cargo: "funcionario"
+                cargo: "funcionario",
+                nome: funcionario.nome_completo
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
