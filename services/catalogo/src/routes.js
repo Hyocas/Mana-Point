@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
+const axiosRetry = require('axios-retry').default;
+const apiClient = axios.create({ timeout: 5000 });
+axiosRetry(apiClient, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 router.post('/cartas/ydk', async (req, res) => {
@@ -36,7 +39,7 @@ router.post('/cartas/ydk', async (req, res) => {
                     apiRequestCount = 0;
                 }
 
-                const apiRes = await axios.get(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${cardId}`);
+                const apiRes = await apiClient.get(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${cardId}`);
                 apiRequestCount++;
 
                 if (!apiRes.data.data || apiRes.data.data.length === 0) continue;
@@ -108,7 +111,7 @@ router.get('/cartas/search', async (req, res) => {
 
         if (resultNome.rows.length === 0) {
             try {
-                const apiRes = await axios.get(
+                const apiRes = await apiClient.get(
                     `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}&format=tcg`
                 );
 
@@ -244,7 +247,7 @@ router.post('/cartas', async (req, res) => {
             });
         }
         
-        const apiRes = await axios.get(
+        const apiRes = await apiClient.get(
             `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
         );
 
