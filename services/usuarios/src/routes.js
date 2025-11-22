@@ -112,13 +112,24 @@ router.post('/funcionarios/registro', async (req, res) => {
     }
 
     try {
+        // Gerar hash da senha (faltava e causava ReferenceError/500)
+        const salt = await bcrypt.genSalt(10);
+        const senhaHash = await bcrypt.hash(senha, salt);
+
         const query = `
             INSERT INTO funcionarios (email, senha_hash, nome_completo, data_nascimento, endereco, cpf)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, email, nome_completo
         `;
 
-        const result = await db.query(query, [email, senhaHash, nomeCompleto, dataNascimento, endereco, cpf]);
+        const result = await db.query(query, [
+            email,
+            senhaHash,
+            nomeCompleto,
+            dataNascimento || null,
+            endereco || null,
+            cpf
+        ]);
 
         res.status(201).json({
             message: "Funcionário registrado com sucesso!",
