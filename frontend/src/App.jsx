@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import CardDetailPage from './pages/CardDetailPage';
 import CartPage from './pages/CartPage';
 import AccountPage from './pages/AccountPage';
+import EditProfilePage from './pages/EditProfilePage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="carta/:id" element={<CardDetailPage />} />
           <Route path="carrinho" element={<CartPage />} />
           <Route path="minha-conta" element={<AccountPage />} />
+          <Route path="editar-perfil" element={<EditProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -205,4 +205,141 @@ router.post('/funcionarios/validar-token', (req, res) => {
     }
 });
 
+const verificarToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ message: "Acesso negado." });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.usuario = decoded;
+        next();
+    } catch (error) {
+        res.status(400).json({ message: "Token inválido." });
+    }
+};
+
+router.get('/usuarios/me', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.cargo !== 'usuario') return res.status(403).json({ message: "Rota exclusiva para usuários." });
+        
+        const resultado = await db.query(
+            'SELECT id, nome_completo, email, data_nascimento, endereco, cpf, criado_em FROM usuarios WHERE id = $1', 
+            [req.usuario.id]
+        );
+        
+        if (resultado.rows.length === 0) return res.status(404).json({ message: "Usuário não encontrado." });
+        
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao buscar perfil." });
+    }
+});
+
+router.get('/funcionarios/me', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.cargo !== 'funcionario') return res.status(403).json({ message: "Rota exclusiva para funcionários." });
+
+        const resultado = await db.query(
+            'SELECT id, nome_completo, email, data_nascimento, endereco, cpf, criado_em FROM funcionarios WHERE id = $1', 
+            [req.usuario.id]
+        );
+
+        if (resultado.rows.length === 0) return res.status(404).json({ message: "Funcionário não encontrado." });
+
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao buscar perfil." });
+    }
+});
+
+router.put('/usuarios/me', verificarToken, async (req, res) => {
+    const { nomeCompleto, dataNascimento, endereco, novaSenha, senhaAtual } = req.body;
+    
+    if (req.usuario.cargo !== 'usuario') {
+        return res.status(403).json({ message: "Acesso restrito a usuários." });
+    }
+
+    if (!senhaAtual) {
+        return res.status(400).json({ message: "É necessário informar a senha atual para confirmar as alterações." });
+    }
+
+    try {
+        const userResult = await db.query('SELECT senha_hash FROM usuarios WHERE id = $1', [req.usuario.id]);
+        const usuarioNoBanco = userResult.rows[0];
+
+        if (!usuarioNoBanco) return res.status(404).json({ message: "Usuário não encontrado." });
+
+        const senhaCorreta = await bcrypt.compare(senhaAtual, usuarioNoBanco.senha_hash);
+        if (!senhaCorreta) {
+            return res.status(401).json({ message: "A senha atual está incorreta." });
+        }
+
+        let senhaFinal = usuarioNoBanco.senha_hash;
+        if (novaSenha && novaSenha.trim() !== "") {
+            const salt = await bcrypt.genSalt(10);
+            senhaFinal = await bcrypt.hash(novaSenha, salt);
+        }
+
+        await db.query(
+            `UPDATE usuarios 
+             SET nome_completo = $1, data_nascimento = $2, endereco = $3, senha_hash = $4 
+             WHERE id = $5`,
+            [nomeCompleto, dataNascimento, endereco, senhaFinal, req.usuario.id]
+        );
+
+        res.json({ message: "Perfil atualizado com sucesso!" });
+
+    } catch (error) {
+        console.error("Erro ao atualizar usuário:", error);
+        res.status(500).json({ message: "Erro ao atualizar perfil." });
+    }
+});
+
+router.put('/funcionarios/me', verificarToken, async (req, res) => {
+    const { nomeCompleto, dataNascimento, endereco, novaSenha, senhaAtual } = req.body;
+
+    if (req.usuario.cargo !== 'funcionario') {
+        return res.status(403).json({ message: "Acesso restrito a funcionários." });
+    }
+
+    if (!senhaAtual) {
+        return res.status(400).json({ message: "É necessário informar a senha atual para confirmar as alterações." });
+    }
+
+    try {
+        const funcResult = await db.query('SELECT senha_hash FROM funcionarios WHERE id = $1', [req.usuario.id]);
+        const funcionarioNoBanco = funcResult.rows[0];
+
+        if (!funcionarioNoBanco) return res.status(404).json({ message: "Funcionário não encontrado." });
+
+        const senhaCorreta = await bcrypt.compare(senhaAtual, funcionarioNoBanco.senha_hash);
+        if (!senhaCorreta) {
+            return res.status(401).json({ message: "A senha atual está incorreta." });
+        }
+
+        let senhaFinal = funcionarioNoBanco.senha_hash;
+        if (novaSenha && novaSenha.trim() !== "") {
+            const salt = await bcrypt.genSalt(10);
+            senhaFinal = await bcrypt.hash(novaSenha, salt);
+        }
+
+        await db.query(
+            `UPDATE funcionarios 
+             SET nome_completo = $1, data_nascimento = $2, endereco = $3, senha_hash = $4 
+             WHERE id = $5`,
+            [nomeCompleto, dataNascimento, endereco, senhaFinal, req.usuario.id]
+        );
+
+        res.json({ message: "Perfil atualizado com sucesso!" });
+
+    } catch (error) {
+        console.error("Erro ao atualizar funcionário:", error);
+        res.status(500).json({ message: "Erro ao atualizar perfil." });
+    }
+});
+
 module.exports = router;
