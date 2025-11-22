@@ -1,0 +1,26 @@
+if (process.env.NODE_ENV === "test") {
+  require("dotenv").config({ path: "./.env.test" });
+} else {
+  require("dotenv").config();
+}
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const routes = require('./routes');
+
+const app = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Rotas reais
+app.use('/api', routes);
+
+// Health check
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: "UP", timestamp: new Date() });
+});
+
+module.exports = app;

@@ -53,7 +53,7 @@ services:
   pagamento_api:
     build: ./services/pagamento
     ports:
-     - "3003:3000"
+      - "3003:3000"
     environment:
       DB_HOST: ${DB_HOST}
       POSTGRES_USER: ${POSTGRES_USER}

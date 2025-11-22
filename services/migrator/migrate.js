@@ -1,4 +1,5 @@
-const { Client } = require('pg');
+const path = require("path");
+const { Client } = require("pg");
 
 const {
   POSTGRES_USER,
@@ -15,41 +16,37 @@ const connectionConfig = {
   user: POSTGRES_USER,
   password: POSTGRES_PASSWORD,
   database: POSTGRES_DB,
+  ssl: DB_SSL === "true" ? { rejectUnauthorized: false } : false
 };
-
-if (DB_SSL === 'true') {
-  connectionConfig.ssl = {
-    rejectUnauthorized: false
-  };
-}
 
 const dbClient = new Client(connectionConfig);
 
 async function runMigrations() {
-  console.log('Iniciando a execução das migrations...');
+  console.log("Iniciando a execução das migrations...");
+
   try {
-    const migrationLibrary = await import('node-pg-migrate');
+    const migrationLibrary = await import("node-pg-migrate");
 
     await dbClient.connect();
-    console.log('Cliente de migração conectado...');
+    console.log(`Conectado no banco: ${POSTGRES_DB}`);
 
     await migrationLibrary.runner({
-      dbClient: dbClient,
-      dir: 'migrations',
-      direction: 'up',
-      migrationsTable: 'pgmigrations',
+      dbClient,
+      dir: path.join(process.cwd(), "migrations"),
+      direction: "up",
+      migrationsTable: "pgmigrations",
       verbose: true
     });
 
-    console.log('Migrations executadas com sucesso!');
+    console.log("Migrations executadas com sucesso!");
+
   } catch (err) {
-    console.error('Erro ao executar migrations:', err);
+    console.error("Erro ao executar migrations:", err);
     process.exit(1);
+
   } finally {
-    if (dbClient) {
-      await dbClient.end();
-      console.log('Cliente de migração desconectado.');
-    }
+    await dbClient.end();
+    console.log("Cliente de migração desconectado.");
   }
 }
 

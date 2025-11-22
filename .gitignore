@@ -18,6 +18,7 @@ Thumbs.db
 # Arquivos de Ambiente e Credenciais (MUITO IMPORTANTE)
 .env
 *.env
+.env.test
 credentials.json
 aws_keys.txt
 
