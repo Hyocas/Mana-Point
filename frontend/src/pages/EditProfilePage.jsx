@@ -154,7 +154,7 @@ export default function EditProfilePage() {
                     </div>
 
                     <div className="form-group">
-                        <label>Endereço de Entrega</label>
+                        <label>Editar endereço de Entrega</label>
                         <input
                             type="text"
                             value={endereco}
