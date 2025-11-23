@@ -11,7 +11,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Rotas reais
 app.use('/api', routes);
 
 // Health check
