@@ -29,31 +29,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js (core)
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies (usuarios)
+      # ---------- usuarios ----------
+      - name: Setup Node.js (usuarios)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
           cache-dependency-path: services/usuarios/package-lock.json
+
+      - name: Install dependencies (usuarios)
         run: |
           cd services/usuarios
           npm ci
 
-      - name: Install dependencies (migrator)
+      # ---------- migrator ----------
+      - name: Setup Node.js (migrator)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
           cache-dependency-path: services/migrator/package-lock.json
+
+      - name: Install dependencies (migrator)
         run: |
           cd services/migrator
           npm ci
 
+      # ---------- Rodar migrations ----------
       - name: Run database migrations
         env:
           DB_HOST: localhost
@@ -66,6 +73,7 @@ jobs:
           cd services/migrator
           node migrate.js
 
+      # ---------- Rodar testes ----------
       - name: Run integration tests
         env:
           NODE_ENV: test
