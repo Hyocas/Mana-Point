@@ -1,7 +1,7 @@
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 describe("Integração – Atualização do Funcionário (PUT /funcionarios/me)", () => {
 
