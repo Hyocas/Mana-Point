@@ -5,8 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "jest --runInBand",
-    "test:integration": "NODE_ENV=dev jest --runInBand"
+    "test": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
