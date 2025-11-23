@@ -13,7 +13,6 @@ app.use(express.json());
 
 app.use('/api', routes);
 
-// Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: "UP", timestamp: new Date() });
 });
