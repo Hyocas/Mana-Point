@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const CHAVE_MESTRA_LOJA = process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA";
 
+// Comentário de teste adicionado
+
 if (!CHAVE_MESTRA_LOJA) {
     console.error("ERRO FATAL: A variável CHAVE_MESTRA_LOJA não está definida no arquivo .env");
     process.exit(1);
