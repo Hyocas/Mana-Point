@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('./db');
 const axios = require('axios');
-const apiClient = require('./apiClient');
+const axiosRetry = require('axios-retry').default;
+const apiClient = axios.create({ timeout: 5000 });
+axiosRetry(apiClient, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 router.post('/cartas/ydk', async (req, res) => {

@@ -1,9 +1,12 @@
-jest.mock("../../src/apiClient", () => ({
-  get: jest.fn(),
+jest.mock("axios", () => ({
+  create: () => ({
+    get: jest.fn(),
+    post: jest.fn()
+  }),
   post: jest.fn()
 }));
 
-const apiClient = require("../../src/apiClient");
+const axios = require("axios");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
@@ -13,7 +16,6 @@ describe("Integração – POST /api/cartas", () => {
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
     jest.clearAllMocks();
-    jest.resetAllMocks();
   });
 
   afterAll(async () => {
@@ -30,17 +32,17 @@ describe("Integração – POST /api/cartas", () => {
 
   it("deve criar carta via API corretamente", async () => {
 
-    apiClient.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ status: 200 });
 
-    apiClient.get.mockResolvedValue({
+    axios.create().get.mockResolvedValue({
       data: {
         data: [{
           id: 555,
           name: "Mock Create",
           type: "Monster",
-          desc: "descricao",
           atk: 1500,
           def: 1200,
+          desc: "descricao",
           card_prices: [{ cardmarket_price: 1 }],
           card_images: [{ image_url: "mock.png" }]
         }]
