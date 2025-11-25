@@ -1,15 +1,19 @@
-jest.mock("axios");
-const axios = require("axios");
+jest.mock("../../src/apiClient", () => ({
+  get: jest.fn(),
+  post: jest.fn()
+}));
 
+const apiClient = require("../../src/apiClient");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-describe("Integração – Deletar carta (DELETE /api/cartas/:id)", () => {
+describe("Integração – DELETE /api/cartas/:id", () => {
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
-    axios.post.mockReset();
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   afterAll(async () => {
@@ -17,28 +21,25 @@ describe("Integração – Deletar carta (DELETE /api/cartas/:id)", () => {
   });
 
   it("deve retornar 401 sem token", async () => {
-    const res = await request(app)
-      .delete("/api/cartas/1");
-
+    const res = await request(app).delete("/api/cartas/1");
     expect(res.statusCode).toBe(401);
   });
 
-  it("deve deletar carta existente quando autorizado (204)", async () => {
-
-    axios.post.mockResolvedValue({ status: 200 });
+  it("deve deletar carta existente com token válido", async () => {
+    apiClient.post.mockResolvedValue({ status: 200 });
 
     await db.query(`
       INSERT INTO cartas (id, nome, quantidade)
-      VALUES (10, 'Mock', 5)
+      VALUES (20, 'Mock Delete', 1)
     `);
 
     const res = await request(app)
-      .delete("/api/cartas/10")
-      .set("Authorization", "Bearer faketoken");
+      .delete("/api/cartas/20")
+      .set("Authorization", "Bearer tokenFake");
 
     expect(res.statusCode).toBe(204);
 
-    const check = await db.query("SELECT * FROM cartas WHERE id = 10");
+    const check = await db.query("SELECT * FROM cartas WHERE id = 20");
     expect(check.rows.length).toBe(0);
   });
 

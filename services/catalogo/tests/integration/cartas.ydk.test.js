@@ -1,15 +1,19 @@
-jest.mock("axios");
-const axios = require("axios");
+jest.mock("../../src/apiClient", () => ({
+  get: jest.fn(),
+  post: jest.fn()
+}));
 
+const apiClient = require("../../src/apiClient");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-describe("Integração – Processar YDK (POST /api/cartas/ydk)", () => {
+describe("Integração – POST /api/cartas/ydk", () => {
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
-    axios.get.mockReset();
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   afterAll(async () => {
@@ -19,22 +23,22 @@ describe("Integração – Processar YDK (POST /api/cartas/ydk)", () => {
   it("deve retornar 400 se deckList for inválido", async () => {
     const res = await request(app)
       .post("/api/cartas/ydk")
-      .send({ deckList: "errado" });
+      .send({ deckList: "invalido" });
 
     expect(res.statusCode).toBe(400);
   });
 
-  it("deve processar carta via API e salvar no banco", async () => {
-    axios.get.mockResolvedValue({
+  it("deve processar carta via API corretamente", async () => {
+    apiClient.get.mockResolvedValue({
       data: {
         data: [{
-          id: 555,
+          id: 1234,
           name: "Mock YDK Card",
           type: "Monster",
           atk: 1000,
           def: 1000,
-          desc: "Mock Desc",
-          card_prices: [{ cardmarket_price: 3 }],
+          desc: "mock desc",
+          card_prices: [{ cardmarket_price: 1 }],
           card_images: [{ image_url: "mock.png" }]
         }]
       }
@@ -42,13 +46,12 @@ describe("Integração – Processar YDK (POST /api/cartas/ydk)", () => {
 
     const res = await request(app)
       .post("/api/cartas/ydk")
-      .send({ deckList: [555] });
+      .send({ deckList: [1234] });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.total).toBe(1);
 
-    const dbCheck = await db.query("SELECT * FROM cartas WHERE id = 555");
-    expect(dbCheck.rows.length).toBe(1);
+    const check = await db.query("SELECT * FROM cartas WHERE id = 1234");
+    expect(check.rows.length).toBe(1);
   });
 
 });

@@ -1,16 +1,19 @@
-jest.mock("axios");
-const axios = require("axios");
+jest.mock("../../src/apiClient", () => ({
+  get: jest.fn(),
+  post: jest.fn()
+}));
 
+const apiClient = require("../../src/apiClient");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-describe("Integração – Criar carta (POST /api/cartas)", () => {
+describe("Integração – POST /api/cartas", () => {
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
-    axios.get.mockReset();
-    axios.post.mockReset();
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   afterAll(async () => {
@@ -20,25 +23,25 @@ describe("Integração – Criar carta (POST /api/cartas)", () => {
   it("deve retornar 401 sem token", async () => {
     const res = await request(app)
       .post("/api/cartas")
-      .send({ nome: "Blue-Eyes" });
+      .send({ nome: "Teste" });
 
     expect(res.statusCode).toBe(401);
   });
 
-  it("deve criar carta via API quando validação passa", async () => {
+  it("deve criar carta via API corretamente", async () => {
 
-    axios.post.mockResolvedValue({ status: 200 });
+    apiClient.post.mockResolvedValue({ status: 200 });
 
-    axios.get.mockResolvedValue({
+    apiClient.get.mockResolvedValue({
       data: {
         data: [{
-          id: 123,
+          id: 555,
           name: "Mock Create",
           type: "Monster",
-          desc: "Desc",
+          desc: "descricao",
           atk: 1500,
           def: 1200,
-          card_prices: [{ cardmarket_price: 2 }],
+          card_prices: [{ cardmarket_price: 1 }],
           card_images: [{ image_url: "mock.png" }]
         }]
       }
@@ -46,13 +49,13 @@ describe("Integração – Criar carta (POST /api/cartas)", () => {
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer faketoken")
+      .set("Authorization", "Bearer tokenFake")
       .send({ nome: "Mock Create" });
 
     expect(res.statusCode).toBe(201);
 
-    const dbCheck = await db.query("SELECT * FROM cartas WHERE id = 123");
-    expect(dbCheck.rows.length).toBe(1);
+    const check = await db.query("SELECT * FROM cartas WHERE id = 555");
+    expect(check.rows.length).toBe(1);
   });
 
 });

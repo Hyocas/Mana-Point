@@ -1,14 +1,18 @@
-jest.mock("axios");
-const axios = require("axios");
+jest.mock("../../src/apiClient", () => ({
+  get: jest.fn(),
+  post: jest.fn()
+}));
 
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-describe("Integração – Buscar carta por ID (GET /api/cartas/:id)", () => {
+describe("Integração – GET /api/cartas/:id", () => {
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   afterAll(async () => {
@@ -20,19 +24,18 @@ describe("Integração – Buscar carta por ID (GET /api/cartas/:id)", () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it("deve retornar 404 quando não existe", async () => {
-    const res = await request(app).get("/api/cartas/99999");
+  it("deve retornar 404 quando não existir", async () => {
+    const res = await request(app).get("/api/cartas/999999");
     expect(res.statusCode).toBe(404);
   });
 
-  it("deve retornar carta quando existe (200)", async () => {
+  it("deve retornar carta existente", async () => {
     await db.query(`
-      INSERT INTO cartas (id, nome, quantidade)
-      VALUES (1, 'Blue-Eyes White Dragon', 3)
+      INSERT INTO cartas (id, nome)
+      VALUES (10, 'Blue-Eyes White Dragon')
     `);
 
-    const res = await request(app).get("/api/cartas/1");
-
+    const res = await request(app).get("/api/cartas/10");
     expect(res.statusCode).toBe(200);
     expect(res.body.nome).toBe("Blue-Eyes White Dragon");
   });
