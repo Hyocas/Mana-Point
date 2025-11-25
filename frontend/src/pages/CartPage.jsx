@@ -259,6 +259,7 @@ export default function CartPage() {
                     <div style={{ textAlign: 'right', marginTop: '2rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
                         Total: R$ {totalPrice.toFixed(2)}
                     </div>
+                    <button>Comprar</button>
                 </div>
             )}
         </div>
