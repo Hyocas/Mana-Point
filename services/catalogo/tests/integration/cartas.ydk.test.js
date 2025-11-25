@@ -1,31 +1,32 @@
-jest.mock("axios", () => {
-  const mockAxiosInstance = {
-    get: jest.fn().mockResolvedValue({
-      data: {
-        data: [{
-          id: 3000,
-          name: "Mock YDK",
-          type: "Spell",
-          desc: "efeito",
-          card_prices: [{ cardmarket_price: 1 }],
-          card_images: [{ image_url: "mock.png" }]
-        }]
-      }
-    }),
-    post: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
-    }
-  };
+ jest.mock("axios", () => {
+   const mockAxiosInstance = {
+     get: jest.fn().mockResolvedValue({
+       data: {
+         data: [{
+           id: 3000,
+           name: "Mock YDK",
+           type: "Spell",
+           desc: "efeito",
+           card_prices: [{ cardmarket_price: 1 }],
+           card_images: [{ image_url: "mock.png" }]
+         }]
+       }
+     }),
+     post: jest.fn(),
+     interceptors: {
+       request: { use: jest.fn() },
+       response: { use: jest.fn() },
+     }
+   };
 
-  return {
-    create: () => mockAxiosInstance,
-    post: jest.fn(),
-    mockInstance: mockAxiosInstance
-  };
-});
+   return {
+     create: () => mockAxiosInstance,
+     post: jest.fn(),
+     mockInstance: mockAxiosInstance
+   };
+ });
 
+const axios = require("axios");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
