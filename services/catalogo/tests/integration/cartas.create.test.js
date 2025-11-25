@@ -1,10 +1,19 @@
-jest.mock("axios", () => ({
-  create: () => ({
+jest.mock("axios", () => {
+  const mockAxiosInstance = {
     get: jest.fn(),
-    post: jest.fn()
-  }),
-  post: jest.fn()
-}));
+    post: jest.fn(),
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    }
+  };
+
+  return {
+    create: () => mockAxiosInstance,
+    post: jest.fn(),
+    mockInstance: mockAxiosInstance
+  };
+});
 
 const axios = require("axios");
 const request = require("supertest");
