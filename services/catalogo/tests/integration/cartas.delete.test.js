@@ -31,8 +31,35 @@ describe("Integração – DELETE /api/cartas/:id", () => {
     await db.end();
   });
 
-  it("deve deletar carta existente com token válido", async () => {
+  it("deve retornar 401 quando não houver token no header", async () => {
+    const res = await request(app).delete("/api/cartas/10");
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe("Token de autenticação não fornecido.");
+  });
 
+  it("deve retornar 401 quando o token for inválido", async () => {
+    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
+
+    const res = await request(app)
+      .delete("/api/cartas/10")
+      .set("Authorization", "Bearer tokenInvalido");
+
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe("Acesso não autorizado. Token inválido.");
+  });
+
+  it("deve retornar 400 para ID inválido (não numérico)", async () => {
+    axios.post.mockResolvedValueOnce({ status: 200 });
+
+    const res = await request(app)
+      .delete("/api/cartas/abc")
+      .set("Authorization", "Bearer tokenFake");
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("O ID fornecido é inválido.");
+  });
+
+  it("deve deletar carta existente com token válido (204)", async () => {
     axios.post.mockResolvedValue({ status: 200 });
 
     await db.query(`
@@ -46,4 +73,17 @@ describe("Integração – DELETE /api/cartas/:id", () => {
 
     expect(res.status).toBe(204);
   });
+
+  it("deve retornar 500 se ocorrer erro interno no banco", async () => {
+    axios.post.mockResolvedValueOnce({ status: 200 });
+    jest.spyOn(db, "query").mockRejectedValueOnce(new Error("DB FAIL"));
+
+    const res = await request(app)
+      .delete("/api/cartas/30")
+      .set("Authorization", "Bearer tokenFake");
+
+    expect(res.status).toBe(500);
+    expect(res.body.message).toBe("Erro interno do servidor.");
+  });
+
 });
