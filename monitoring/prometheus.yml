@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'catalogo_service'
+    static_configs:
+      - targets: ['catalogo_api:3000']
+
+  - job_name: 'usuarios_service'
+    static_configs:
+      - targets: ['usuarios_api:3000']
+
+  - job_name: 'carrinho_service'
+    static_configs:
+      - targets: ['carrinho_api:3000']
+
+  - job_name: 'pagamento_service'
+    static_configs:
+      - targets: ['pagamento_api:3000']
