@@ -1,10 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: ["v1.7"]
   pull_request:
-    branches: ["v1.7"]
+    branches: ["main"]
 
 jobs:
   usuarios-tests:
