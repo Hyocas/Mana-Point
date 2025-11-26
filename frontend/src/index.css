@@ -74,10 +74,18 @@ body {
 }
 
 .container {
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    margin: 0 auto;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.register-container {
+  max-width: 900px;
+}
+
+.register-card {
+  width: 100%;
 }
 
 .auth-card, .catalog-page, .card {
@@ -189,6 +197,33 @@ a:hover {
 .dob-row { display: flex; gap: 8px; }
 .dob-row select { flex: 1; padding: 12px; border-radius: 5px; border: 1px solid var(--background-light); background-color: var(--background-dark); color: var(--text-color); }
 .dob-row select:focus { outline: none; border-color: var(--accent-gold); }
+
+.register-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.register-form-grid .form-group {
+  margin-bottom: 0;
+}
+
+.grid-span-2 {
+  grid-column: 1 / -1;
+}
+
+.form-group.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .register-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .catalog-page {
     max-width: 1200px;
@@ -485,6 +520,59 @@ button:disabled, .placeholder { background-color: #555 !important; cursor: not-a
 .add-card-form-style-b button {
   padding: 10px 18px;
   border-radius: 5px;
+}
+
+/* --- Painel de Funcionários --- */
+.inventory-dashboard { display: flex; flex-direction: column; gap: 1.5rem; }
+.inventory-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.ghost-button { width: auto; background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; margin-top: 0; }
+.ghost-button:hover { background-color: var(--accent-gold); color: var(--background-dark); }
+
+.inventory-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.summary-card { background-color: var(--background-medium); border: 1px solid #4a3f55; border-radius: 8px; padding: 1rem; text-align: left; }
+.summary-card span { display: block; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-text); }
+.summary-card strong { display: block; font-size: 1.8rem; margin-top: 0.35rem; }
+.summary-card.warning { border-color: var(--accent-gold); }
+.summary-card.warning strong { color: var(--accent-gold); }
+.summary-card.danger { border-color: var(--danger); }
+.summary-card.danger strong { color: var(--danger); }
+
+.quick-add-form { display: flex; flex-wrap: wrap; gap: 1rem; background-color: var(--background-medium); border: 1px solid #4a3f55; border-radius: 8px; padding: 1rem; }
+.quick-add-field { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.35rem; }
+.quick-add-field label { font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-text); }
+.quick-add-field input { width: 100%; }
+.quick-add-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; margin-left: auto; }
+.quick-add-form button { width: auto; min-width: 160px; margin-top: 0; }
+.quick-delete-button { align-self: flex-end; }
+
+.inventory-table-wrapper { background-color: var(--background-medium); border: 1px solid #4a3f55; border-radius: 8px; overflow: auto; }
+.inventory-table { width: 100%; border-collapse: collapse; min-width: 620px; }
+.inventory-table thead { background-color: var(--background-light); }
+.inventory-table th, .inventory-table td { padding: 0.9rem 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.inventory-table th { font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-text); }
+.inventory-table tbody tr:hover { background-color: rgba(255,255,255,0.04); }
+
+.inventory-name-cell { display: flex; flex-direction: column; gap: 0.15rem; }
+.inventory-subtitle { font-size: 0.8rem; color: var(--muted-text); }
+
+.status-pill { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem 0.8rem; border-radius: 999px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.05em; text-transform: uppercase; }
+.status-pill.success { background-color: rgba(61, 201, 82, 0.15); color: var(--success); }
+.status-pill.warning { background-color: rgba(229, 179, 91, 0.18); color: var(--accent-gold); }
+.status-pill.danger { background-color: rgba(255, 90, 95, 0.18); color: var(--accent-red); }
+
+.inventory-actions { display: flex; gap: 0.5rem; }
+.table-action { width: auto; padding: 0.4rem 0.9rem; border-radius: 6px; border: 1px solid var(--background-light); background: transparent; color: var(--text-color); font-weight: 600; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
+.table-action.danger { border-color: var(--danger); color: var(--danger); }
+.table-action.danger:hover { background-color: var(--danger); color: #fff; }
+
+.inventory-empty { padding: 1rem 1.5rem; color: var(--muted-text); }
+
+@media (max-width: 640px) {
+    .inventory-header { flex-direction: column; align-items: flex-start; }
+    .quick-add-form { flex-direction: column; }
+  .quick-add-form button { width: 100%; }
+  .quick-add-actions { width: 100%; margin-left: 0; }
+  .quick-delete-button { width: 100%; }
 }
 
 .card-grid-section {

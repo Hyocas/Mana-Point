@@ -15,7 +15,7 @@ describe("Integração - Registro de Funcionários", () => {
   const funcionarioBase = {
     email: "funcionario@example.com",
     senha: "senha123",
-    codigoSeguranca: "MILTINHOOPISCAPISCA",
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
     nomeCompleto: "Funcionário Teste",
     dataNascimento: "1990-01-01",
     endereco: "Rua Teste",

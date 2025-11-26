@@ -16,7 +16,7 @@ describe("Integração – Atualização do Funcionário (PUT /funcionarios/me)"
     cpf: "77889911223",
     endereco: "Rua FuncUpdate, 99",
     dataNascimento: "1985-05-05",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   const usuario = {

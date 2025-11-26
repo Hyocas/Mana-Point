@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { jwtDecode } from 'jwt-decode';
+
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+});
+
+const LOW_STOCK_LIMIT = 5;
 
 export default function HomePage() {
     const [cartas, setCartas] = useState([]);
@@ -10,9 +17,7 @@ export default function HomePage() {
     const [cardNameToAdd, setCardNameToAdd] = useState('');
     const [quantidadeToAdd, setQuantidadeToAdd] = useState(1);
 
-    const navigate = useNavigate();
     const catalogApiUrl = '/api/catalogo_proxy';
-    const carrinhoApiUrl = '/api/carrinho_proxy';
 
     const token = localStorage.getItem('authToken');
     const [searchParams] = useSearchParams();
@@ -122,6 +127,7 @@ export default function HomePage() {
             if (!response.ok) throw new Error(data.message || "Erro ao adicionar carta");
 
             setCardNameToAdd('');
+            setQuantidadeToAdd(1);
             fetchCatalog();
         } catch (err) {
             alert(err.message);
@@ -147,40 +153,181 @@ export default function HomePage() {
         }
     };
 
-    if (loading) return <p>Carregando catálogo...</p>;
-    if (error) return <p className="error">{error}</p>;
+    const handleDeleteAllCards = async () => {
+        if (!token) {
+            alert('É necessário estar autenticado como funcionário para executar esta ação.');
+            return;
+        }
 
-    return (
-        <div className="homepage-content">
+        if (!confirm('Tem certeza que deseja deletar todo o catálogo?')) return;
 
-            {isFuncionario && (
-                <form 
-                    id="add-card-form" 
-                    onSubmit={handleAddCard}
-                    className="add-card-form-style-b"
-                    style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}
-                >
-                    <input 
-                        type="text" 
-                        placeholder="Nome exato da carta (API YGOPro)"
+        try {
+            const response = await fetch(`${catalogApiUrl}/cartas`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.status !== 204) {
+                const data = await response.json();
+                throw new Error(data.message || 'Falha ao deletar todas as cartas.');
+            }
+            fetchCatalog();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const totalEstoque = cartas.reduce((sum, carta) => sum + (Number(carta.quantidade) || 0), 0);
+    const lowStockCount = cartas.filter((carta) => {
+        const quantidade = Number(carta.quantidade) || 0;
+        return quantidade > 0 && quantidade <= LOW_STOCK_LIMIT;
+    }).length;
+    const zeroStockCount = cartas.filter((carta) => (Number(carta.quantidade) || 0) === 0).length;
+    const sortedCartas = [...cartas].sort((a, b) => (a?.nome || '').localeCompare(b?.nome || ''));
+
+    const formatCurrencyValue = (value) => {
+        if (value === null || value === undefined || value === '') return '--';
+        const parsed = Number(value);
+        if (Number.isNaN(parsed)) return '--';
+        return currencyFormatter.format(parsed);
+    };
+
+    const getStatusClass = (qty) => {
+        if (qty === 0) return 'status-pill danger';
+        if (qty <= LOW_STOCK_LIMIT) return 'status-pill warning';
+        return 'status-pill success';
+    };
+
+    const getStatusLabel = (qty) => {
+        if (qty === 0) return 'Esgotada';
+        if (qty <= LOW_STOCK_LIMIT) return 'Baixo estoque';
+        return 'Disponível';
+    };
+
+    const renderFuncionarioDashboard = () => (
+        <div className="inventory-dashboard">
+            <div className="inventory-header">
+                <div>
+                    <h2>Painel do Catálogo</h2>
+                </div>
+                <button type="button" className="ghost-button" onClick={fetchCatalog}>
+                    Atualizar lista
+                </button>
+            </div>
+
+            <div className="inventory-summary-grid">
+                <div className="summary-card">
+                    <span>Cartas únicas</span>
+                    <strong>{cartas.length}</strong>
+                </div>
+                <div className="summary-card">
+                    <span>Total em estoque</span>
+                    <strong>{totalEstoque}</strong>
+                </div>
+                <div className="summary-card warning">
+                    <span>Baixo estoque (&lt;= {LOW_STOCK_LIMIT})</span>
+                    <strong>{lowStockCount}</strong>
+                </div>
+                <div className="summary-card danger">
+                    <span>Esgotadas</span>
+                    <strong>{zeroStockCount}</strong>
+                </div>
+            </div>
+
+            <form 
+                id="add-card-form"
+                onSubmit={handleAddCard}
+                className="quick-add-form"
+            >
+                <div className="quick-add-field name-field">
+                    <label>Nome exato da carta</label>
+                    <input
+                        type="text"
+                        placeholder="Nome na API YGOPro"
                         value={cardNameToAdd}
                         onChange={(e) => setCardNameToAdd(e.target.value)}
                         required
-                        style={{ flexGrow: 1 }}
                     />
+                </div>
+                <div className="quick-add-field quantity-field">
+                    <label>Quantidade</label>
                     <input
                         type="number"
                         min="0"
                         value={quantidadeToAdd}
                         onChange={(e) => setQuantidadeToAdd(Number(e.target.value))}
                         required
-                        placeholder="Qtd"
-                        style={{ width: '80px', textAlign: 'center' }}
                     />
-                    <button type="submit">Adicionar Carta</button>
-                </form>
-            )}
+                </div>
+                <div className="quick-add-actions">
+                    <button type="submit">Adicionar carta(s)</button>
+                    <button
+                        type="button"
+                        className="table-action danger quick-delete-button"
+                        onClick={handleDeleteAllCards}
+                    >
+                        Remover catálogo
+                    </button>
+                </div>
+            </form>
 
+            <div className="inventory-table-wrapper">
+                {sortedCartas.length === 0 ? (
+                    <p className="inventory-empty">Nenhuma carta cadastrada. Utilize o formulário acima para adicionar.</p>
+                ) : (
+                    <table className="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Quantidade</th>
+                                <th>Estoque</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sortedCartas.map((carta) => {
+                                const quantidade = Number(carta.quantidade) || 0;
+                                return (
+                                    <tr key={carta.id}>
+                                        <td>
+                                            <div className="inventory-name-cell">
+                                                <strong>{carta.nome || 'Sem nome'}</strong>
+                                                {carta.modelo && <span className="inventory-subtitle">{carta.modelo}</span>}
+                                            </div>
+                                        </td>
+                                        <td>{quantidade}</td>
+                                        <td>
+                                            <span className={getStatusClass(quantidade)}>{getStatusLabel(quantidade)}</span>
+                                        </td>
+                                        <td>{formatCurrencyValue(carta.preco)}</td>
+                                        <td>
+                                            <div className="inventory-actions">
+                                                <button
+                                                    type="button"
+                                                    className="table-action danger"
+                                                    onClick={() => handleDeleteCard(carta.id, carta.nome)}
+                                                >
+                                                    Remover
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    );
+
+    if (loading) return <p>Carregando catálogo...</p>;
+    if (error) return <p className="error">{error}</p>;
+    if (isFuncionario) return renderFuncionarioDashboard();
+
+    return (
+        <div className="homepage-content">
             <section className="card-grid-section">
                 <div className="section-header">
                     <h3>Catálogo Completo</h3> 
@@ -190,14 +337,13 @@ export default function HomePage() {
                         <ProductCard 
                             key={carta.id} 
                             carta={carta} 
-                            onDelete={isFuncionario ? () => handleDeleteCard(carta.id, carta.nome) : null}
                         />
                     ))}
                 </div>
             </section>
 
             {cartas.length === 0 && !loading && (
-                <p>{isFuncionario ? 'Catálogo vazio. Adicione cartas.' : 'Nenhuma carta encontrada.'}</p>
+                <p>Nenhuma carta encontrada.</p>
             )}
         </div>
     );

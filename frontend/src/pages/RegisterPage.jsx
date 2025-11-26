@@ -97,114 +97,117 @@ export default function RegisterPage() {
 
     return (
         <>
-        <div className="container">
-            <div className="auth-card">
+        <div className="container register-container">
+            <div className="auth-card register-card">
                 <div className="logo-container">
                     <img src="/logo-transparente.png" alt="Mana-Point Logo" className="logo-img" />
                 </div>
                 <h1>Cadastro</h1>
 
-                <form id="register-form" onSubmit={handleRegister}>
-                    <div className="form-group">
-                        <label>Nome Completo</label>
-                        <input
-                            type="text"
-                            value={nomeCompleto}
-                            onChange={(e) => setNomeCompleto(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Email</label>
-                        <input 
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>CPF</label>
-                        <input
-                            type="text"
-                            value={cpf}
-                            onChange={(e) => setCpf(e.target.value)}
-                            placeholder="000.000.000-00"
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Data de Nascimento</label>
-                        <div className="dob-row">
-                            <select value={dia} onChange={e=>setDia(e.target.value)}>
-                                <option value="">Dia</option>
-                                {Array.from({length:31}, (_,i)=> i+1).map(d => (
-                                    <option key={d} value={d}>{String(d).padStart(2,'0')}</option>
-                                ))}
-                            </select>
-                            <select value={mes} onChange={e=>setMes(e.target.value)}>
-                                <option value="">Mês</option>
-                                {[
-                                    'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
-                                ].map((m,idx) => (
-                                    <option key={m} value={idx+1}>{m}</option>
-                                ))}
-                            </select>
-                            <select value={ano} onChange={e=>setAno(e.target.value)}>
-                                <option value="">Ano</option>
-                                {Array.from({length: 150}, (_,i) => new Date().getFullYear() - i - 10).map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Senha</label>
-                        <input 
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Confirmar Senha</label>
-                        <input 
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group checkbox-group">
-                        <input 
-                            type="checkbox"
-                            id="is-func"
-                            checked={isFuncionario}
-                            onChange={(e) => setIsFuncionario(e.target.checked)}
-                        />
-                        <label htmlFor="is-func">
-                            Registrar como funcionário (requer código de segurança)
-                        </label>
-                    </div>
-
-                    {isFuncionario && (
-                        <div className="form-group">
-                            <label>Código de Segurança</label>
+                <form id="register-form" className="register-form" onSubmit={handleRegister}>
+                    <div className="register-form-grid">
+                        <div className="form-group grid-span-2">
+                            <label>Nome Completo</label>
                             <input
-                                type="password"
-                                value={codigoSeguranca}
-                                onChange={(e) => setCodigoSeguranca(e.target.value)}
-                                required={isFuncionario}
+                                type="text"
+                                value={nomeCompleto}
+                                onChange={(e) => setNomeCompleto(e.target.value)}
+                                required
                             />
                         </div>
-                    )}
+
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input 
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>CPF</label>
+                            <input
+                                type="text"
+                                value={cpf}
+                                onChange={(e) => setCpf(e.target.value)}
+                                placeholder="000.000.000-00"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group grid-span-2">
+                            <label>Data de Nascimento</label>
+                            <div className="dob-row">
+                                <select value={dia} onChange={e=>setDia(e.target.value)}>
+                                    <option value="">Dia</option>
+                                    {Array.from({length:31}, (_,i)=> i+1).map(d => (
+                                        <option key={d} value={d}>{String(d).padStart(2,'0')}</option>
+                                    ))}
+                                </select>
+                                <select value={mes} onChange={e=>setMes(e.target.value)}>
+                                    <option value="">Mês</option>
+                                    {[
+                                        'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                                        'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+                                    ].map((m,idx) => (
+                                        <option key={m} value={idx+1}>{m}</option>
+                                    ))}
+                                </select>
+                                <select value={ano} onChange={e=>setAno(e.target.value)}>
+                                    <option value="">Ano</option>
+                                    {Array.from({length: 150}, (_,i) => new Date().getFullYear() - i - 10).map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Senha</label>
+                            <input 
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Confirmar Senha</label>
+                            <input 
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group checkbox-group grid-span-2">
+                            <input 
+                                type="checkbox"
+                                id="is-func"
+                                checked={isFuncionario}
+                                onChange={(e) => setIsFuncionario(e.target.checked)}
+                            />
+                            <label htmlFor="is-func">
+                                Registrar como funcionário (requer código de segurança)
+                            </label>
+                        </div>
+
+                        {isFuncionario && (
+                            <div className="form-group grid-span-2">
+                                <label>Código de Segurança</label>
+                                <input
+                                    type="password"
+                                    value={codigoSeguranca}
+                                    onChange={(e) => setCodigoSeguranca(e.target.value)}
+                                    required={isFuncionario}
+                                />
+                            </div>
+                        )}
+                    </div>
 
                     <button type="submit">Cadastrar</button>
 

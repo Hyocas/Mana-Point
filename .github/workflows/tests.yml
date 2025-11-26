@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 jobs:
-  test:
+  usuarios-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -14,9 +14,11 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mana_point_db_test
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=5s
@@ -39,33 +41,92 @@ jobs:
           cd services/usuarios
           npm ci
 
-      - name: Install dependencies (migrator)
+      - name: Install migrator
         run: |
           cd services/migrator
           npm install
 
       - name: Run database migrations
         env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mana_point_db_test
-          DB_SSL: false
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         run: |
           cd services/migrator
           node migrate.js
 
-      - name: Run integration tests
+      - name: Run tests
         env:
-          NODE_ENV: test
-          DB_HOST: localhost
-          DB_PORT: 5432
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mana_point_db_test
-          DB_SSL: false
-          JWT_SECRET: test_secret
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET}}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/usuarios
+          npm test
+
+  catalogo-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/catalogo/package-lock.json
+
+      - name: Install dependencies (catalogo)
+        run: |
+          cd services/catalogo
+          npm ci
+
+      - name: Install migrator
+        run: |
+          cd services/migrator
+          npm install
+
+      - name: Run migrations
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          cd services/migrator
+          node migrate.js
+
+      - name: Run tests
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          cd services/catalogo
           npm test

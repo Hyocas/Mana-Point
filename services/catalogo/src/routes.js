@@ -283,6 +283,24 @@ router.post('/cartas', async (req, res) => {
     }
 });
 
+router.delete('/cartas', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: 'Token obrigatório.' });
+
+  const token = authHeader.split(' ')[1];
+  try {
+    await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
+    await db.query('DELETE FROM cartas');
+    return res.status(204).send();
+  } catch (error) {
+    if (error.response?.status === 401) {
+      return res.status(401).json({ message: 'Token inválido.' });
+    }
+    console.error('Erro ao apagar catálogo:', error);
+    return res.status(500).json({ message: 'Erro interno ao limpar catálogo.' });
+  }
+});
+
 router.delete('/cartas/:id', async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {

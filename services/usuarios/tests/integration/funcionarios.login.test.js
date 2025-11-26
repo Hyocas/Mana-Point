@@ -11,7 +11,7 @@ describe("Integração – Login de Funcionários", () => {
     cpf: "99988877766",
     endereco: "Rua dos Testes, 123",
     dataNascimento: "1990-10-10",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   beforeAll(async () => {
