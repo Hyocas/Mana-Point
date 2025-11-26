@@ -19,6 +19,8 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=5s

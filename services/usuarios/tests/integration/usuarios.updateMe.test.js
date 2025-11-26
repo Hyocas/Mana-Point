@@ -25,7 +25,7 @@ describe("Integração – Atualização do Perfil do Usuário (PUT /usuarios/me
     cpf: "33322211144",
     endereco: "Rua FuncPUT, 22",
     dataNascimento: "1980-01-01",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   beforeAll(async () => {

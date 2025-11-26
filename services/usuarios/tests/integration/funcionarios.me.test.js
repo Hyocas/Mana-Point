@@ -15,7 +15,7 @@ describe("Integração – Perfil do Funcionário (GET /funcionarios/me)", () =>
     cpf: "11223344556",
     endereco: "Rua Func, 10",
     dataNascimento: "1980-10-10",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   const usuario = {

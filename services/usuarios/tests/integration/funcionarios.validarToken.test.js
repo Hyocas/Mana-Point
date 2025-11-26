@@ -13,7 +13,7 @@ describe("Integração – Validação de Token de Funcionários", () => {
     cpf: "11122233344",
     endereco: "Rua Token, 987",
     dataNascimento: "1985-05-15",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   beforeAll(async () => {

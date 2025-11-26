@@ -24,7 +24,7 @@ describe("Integração – Perfil do usuário (GET /usuarios/me)", () => {
     cpf: "55566677788",
     endereco: "Rua Func, 99",
     dataNascimento: "1980-01-15",
-    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA || "MILTINHOOPISCAPISCA"
+    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
   };
 
   beforeAll(async () => {
