@@ -1,4 +1,4 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require('express');
 const cors = require('cors');
@@ -8,7 +8,8 @@ const routes = require('./routes');
 
 const app = express();
 
-client.collectDefaultMetrics();
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
 
 app.use(helmet());
 app.use(cors());
@@ -24,8 +25,8 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-type', client.register.contentType);
     try {
         res.send(await client.register.metrics());
-    } catch (err) {
-        res.status(500).send(err);
+    } catch (ex) {
+        res.status(500).send(ex);
     }
 });
 
