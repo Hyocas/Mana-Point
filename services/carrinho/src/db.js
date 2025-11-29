@@ -18,5 +18,6 @@ const pool = new Pool(connectionConfig);
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  pool: pool
+  pool,
+  end: () => pool.end()
 };
