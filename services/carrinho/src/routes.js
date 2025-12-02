@@ -72,7 +72,7 @@ router.post('/carrinho', validarToken, async (req, res) => {
             return res.status(400).json({message: 'Estoque insufienciente para a quantidade solicitada.'})
         }
 
-        const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2';
+        const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2 FOR UPDATE';
         const itemExistente = await client.query(itemExistenteQuery, [usuarioId, produto_id]);
 
         let resultCarrinho;
@@ -82,14 +82,30 @@ router.post('/carrinho', validarToken, async (req, res) => {
 
             if (estoqueAtual < novaQuantidade) {
                 await client.query('ROLLBACK');
-                return res.status(400).json({message: `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`});
+                return res.status(400).json({
+                    message: `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`
+                });
             }
 
-            const updateQuery = 'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
-            resultCarrinho = await client.query(updateQuery, [novaQuantidade, preco_unitario, existingItem.id]);
-        } else { 
-            const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2 FOR UPDATE';
-            resultCarrinho = await client.query(insertQuery, [usuarioId, produto_id, quantidade, preco_unitario]);
+            const updateQuery =
+            'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
+
+            resultCarrinho = await client.query(updateQuery, [
+            novaQuantidade,
+            preco_unitario,
+            existingItem.id
+            ]);
+
+        } else {
+            const insertQuery =
+            'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
+
+            resultCarrinho = await client.query(insertQuery, [
+            usuarioId,
+            produto_id,
+            quantidade,
+            preco_unitario
+            ]);
         }
 
         await client.query('COMMIT');
