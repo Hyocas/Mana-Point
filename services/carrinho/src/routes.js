@@ -72,7 +72,7 @@ router.post('/carrinho', validarToken, async (req, res) => {
             return res.status(400).json({message: 'Estoque insufienciente para a quantidade solicitada.'})
         }
 
-        const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2 FOR UPDATE';
+        const itemExistenteQuery = 'SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2';
         const itemExistente = await client.query(itemExistenteQuery, [usuarioId, produto_id]);
 
         let resultCarrinho;
