@@ -45,7 +45,12 @@ describe("POST /api/carrinho", () => {
 
   it("400 → estoque insuficiente", async () => {
     axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"cliente"}} });
-    await db.query(`INSERT INTO cartas VALUES (1,'Card',10,5,'efeito',20,'img',2)`);
+
+    await db.query(`
+      INSERT INTO cartas 
+      (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 2)
+    `);
 
     const res = await request(app)
       .post("/api/carrinho")
@@ -57,7 +62,12 @@ describe("POST /api/carrinho", () => {
 
   it("201 → adiciona ao carrinho com sucesso", async () => {
     axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"cliente"}} });
-    await db.query(`INSERT INTO cartas VALUES (1,'Card',10,5,'efeito',20,'img',5)`);
+
+    await db.query(`
+      INSERT INTO cartas 
+      (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 5)
+    `);
 
     const res = await request(app)
       .post("/api/carrinho")
