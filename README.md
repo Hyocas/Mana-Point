@@ -1,7 +1,7 @@
 # Manapoint - E-commerce de Card Games
 
 <p align="center">
-  <img src="./frontend/public/logo-transparente.jpg" alt="Logo ManaPoint" width="250"/>
+  <img src="./frontend/public/logo-transparente.png" alt="Logo ManaPoint" width="250"/>
 </p>
 
 O **Manapoint** é uma plataforma de e-commerce distribuída e baseada em microsserviços, especializada na compra e venda de cartas colecionáveis (Yu-Gi-Oh!). Desenvolvido para a disciplina de Engenharia de Software e Sistemas Distribuídos, o projeto foca em escalabilidade, desacoplamento e robustez.
