@@ -18,7 +18,7 @@ describe("Service: Funcionários", () => {
         it("deve falhar ao não enviar campos obrigatórios", async () => {
             await expect(
                 funcionariosService.registrarFuncionario({ email:"a", senha:"b" })
-            ).rejects.toThrow("Todos os campos obrigatórios devem ser preenchidos.");
+            ).rejects.toThrow("Todos os campos são obrigatórios.");
         });
 
         it("deve registrar funcionário com sucesso", async () => {
@@ -31,10 +31,12 @@ describe("Service: Funcionários", () => {
 
             const res = await funcionariosService.registrarFuncionario({
                 email: "func@teste.com",
-                senha: "123",
-                nomeCompleto: "Fulano",
-                cpf: "123",
-                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
+                senha_hash: "123",
+                codigo_seguranca_hash: process.env.CHAVE_MESTRA_LOJA,
+                nome_completo: "Fulano",
+                data_nascimento: "2000-01-01",
+                endereco: "Rua A",
+                cpf: "12311111111",
             });
 
             expect(db.query).toHaveBeenCalled();
@@ -44,11 +46,13 @@ describe("Service: Funcionários", () => {
         it("deve falhar se código de segurança for incorreto", async () => {
             await expect(
                 funcionariosService.registrarFuncionario({
-                    email: "func@teste.com",
-                    senha: "123",
-                    nomeCompleto: "Fulano",
-                    cpf: "123",
-                    codigoSeguranca: "errado"
+                    email: "func2@teste.com",
+                    senha_hash: "123",
+                    codigo_seguranca_hash: "errado",
+                    nome_completo: "Fulano",
+                    data_nascimento: "2000-01-01",
+                    endereco: "Rua A",
+                    cpf: "12311111112",
                 })
             ).rejects.toThrow("Código de segurança incorreto.");
         });
@@ -61,10 +65,12 @@ describe("Service: Funcionários", () => {
             await expect(
                 funcionariosService.registrarFuncionario({
                     email: "func@teste.com",
-                    senha: "123",
-                    nomeCompleto: "Fulano",
-                    cpf: "123",
-                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
+                    senha_hash: "123",
+                    codigo_seguranca_hash: process.env.CHAVE_MESTRA_LOJA,
+                    nome_completo: "Fulano",
+                    data_nascimento: "2000-01-01",
+                    endereco: "Rua A",
+                    cpf: "12311111111",
                 })
             ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
         });
