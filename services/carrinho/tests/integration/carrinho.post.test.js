@@ -53,11 +53,15 @@ describe("Logs do Carrinho (POST /api/carrinho)", () => {
       data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
     });
 
-    const mockQuery = jest.fn()
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ preco: 20.00, quantidade: 5 }] })
+    const mockQuery = jest
+      .fn()
+      .mockResolvedValueOnce({}) 
+      .mockResolvedValueOnce({
+        rows: [{ preco: 20.00, quantidade: 5 }]
+      })
       .mockResolvedValueOnce({ rows: [] })
       .mockRejectedValueOnce(new Error("DB FAIL"));
+      
     jest.spyOn(db.pool, "connect").mockResolvedValue({
       query: mockQuery,
       release: jest.fn()
