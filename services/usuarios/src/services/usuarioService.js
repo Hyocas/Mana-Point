@@ -41,7 +41,7 @@ module.exports = {
     async loginUsuario(email, senha) {
 
         if (!email || !senha) {
-            const e = new Error("Email e senhas e são obrigatórios.");
+            const e = new Error("Email e senhas são obrigatórios.");
             e.status = 400;
             throw e;
         }

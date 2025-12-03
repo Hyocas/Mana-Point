@@ -53,7 +53,7 @@ module.exports = {
             }
 
             if (req.usuario.cargo !== "funcionario") {
-                return res.status(403).json({ message: "Acesso restrito a funcionários." });
+                return res.status(403).json({ message: "Rota exclusiva para funcionários." });
             }
 
             res.json(perfil);

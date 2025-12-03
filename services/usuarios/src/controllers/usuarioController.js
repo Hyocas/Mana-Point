@@ -42,7 +42,7 @@ module.exports = {
             }
 
             if (req.usuario.cargo !== "usuario") {
-                return res.status(403).json({ message: "Acesso restrito a usuários." });
+                return res.status(403).json({ message: "Rota exclusiva para usuários." });
             }
 
             res.json(perfil);

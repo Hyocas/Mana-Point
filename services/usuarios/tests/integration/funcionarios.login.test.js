@@ -48,7 +48,7 @@ describe("Integração – Login de Funcionários", () => {
       });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toBe("Email e senha e são obrigatórios.");
+    expect(res.body.message).toBe("Email e senha são obrigatórios.");
   });
 
   it("deve retornar 401 quando o funcionário não existe", async () => {
