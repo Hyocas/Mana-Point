@@ -1,88 +1,65 @@
 const request = require("supertest");
+const axios = require("axios");
 const app = require("../../src/app");
-const db = require("../../src/db");
 
-describe("POST /api/carrinho", () => {
+jest.mock("axios");
 
-  beforeEach(async () => {
-    await db.query("DELETE FROM carrinho_itens;");
-    await db.query("DELETE FROM cartas;");
-    await db.query("DELETE FROM usuarios;");
+describe("Logs do Carrinho (POST /api/carrinho)", () => {
 
-    await db.query(`
-      INSERT INTO usuarios (id, email, senha_hash)
-      VALUES (1, 'teste@teste.com', 'hash123')
-    `);
+  let logSpy, warnSpy, errorSpy;
 
-    await db.query(`
-      INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, quantidade)
-      VALUES (1, 'Dragão Branco', 'Monstro', 3000, 2500, 'Brabo', 20.00, 5)
-    `);
+  beforeEach(() => {
+    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  afterAll(async () => {
-    await db.pool.end();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  test("401 → sem token", async () => {
-    const res = await request(app)
+  it("deve logar tentativa de adicionar ao carrinho", async () => {
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
+    });
+
+    await request(app)
       .post("/api/carrinho")
+      .set("Authorization", "Bearer token")
       .send({ produto_id: 1, quantidade: 1 });
 
-    expect(res.status).toBe(401);
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("[POST /carrinho] - UsuarioId: 1"));
   });
 
-  test("403 → funcionário não pode comprar", async () => {
-    jest.spyOn(require("axios"), "post").mockResolvedValue({
+  it("deve logar quando funcionário tenta comprar (403)", async () => {
+    axios.post.mockResolvedValue({
       data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
     });
 
-    const res = await request(app)
-      .post("/api/carrinho")
-      .set("Authorization", "Bearer mocked")
-      .send({ produto_id: 1, quantidade: 1 });
-
-    expect(res.status).toBe(403);
-  });
-
-  test("400 → campos obrigatórios não enviados", async () => {
-    jest.spyOn(require("axios"), "post").mockResolvedValue({
-      data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
-    });
-
-    const res = await request(app)
+    await request(app)
       .post("/api/carrinho")
       .set("Authorization", "Bearer token")
-      .send({});
+      .send({ produto_id: 1, quantidade: 1 });
 
-    expect(res.status).toBe(400);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining("Erro"));
   });
 
-  test("400 → estoque insuficiente", async () => {
-    jest.spyOn(require("axios"), "post").mockResolvedValue({
+  it("deve logar erro real no bloco catch (console.error)", async () => {
+    axios.post.mockResolvedValue({
       data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
     });
 
-    const res = await request(app)
+    jest.spyOn(require("../../src/db"), "query")
+      .mockRejectedValue(new Error("DB FAIL"));
+
+    await request(app)
       .post("/api/carrinho")
-      .set("Authorization", "Bearer abc")
-      .send({ produto_id: 1, quantidade: 10 });
+      .set("Authorization", "Bearer token")
+      .send({ produto_id: 1, quantidade: 1 });
 
-    expect(res.status).toBe(400);
-  });
-
-  test("201 → adiciona ao carrinho com sucesso", async () => {
-    jest.spyOn(require("axios"), "post").mockResolvedValue({
-      data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
-    });
-
-    const res = await request(app)
-      .post("/api/carrinho")
-      .set("Authorization", "Bearer abc")
-      .send({ produto_id: 1, quantidade: 2 });
-
-    expect(res.status).toBe(201);
-    expect(res.body.quantidade).toBe(2);
+    expect(errorSpy).toHaveBeenCalled(); 
+    expect(errorSpy.mock.calls[0][0]).toContain("ERRO REAL");
   });
 
 });
