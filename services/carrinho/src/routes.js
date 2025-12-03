@@ -98,6 +98,7 @@ router.post('/carrinho', validarToken, async (req, res) => {
         return res.status(201).json(resultCarrinho.rows[0]);
 
     } catch (error) {
+        console.error("ERRO REAL:", error);
         await client.query('ROLLBACK');
         if (error.code === '23505' && error.constraint === 'uniq_carrinho_usuario_produto') {
             return res.status(409).json({message: 'Este item já está sendo adicionado ao carrinho. Tente atualizar a quantidade.'});
