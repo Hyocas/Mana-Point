@@ -1,4 +1,4 @@
-const usuariosService = require("../../src/services/usuarioService");
+const usuariosService = require("../../src/services/usuariosService");
 const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");

@@ -1,4 +1,4 @@
-const funcionariosService = require("../../src/services/funcionarioService");
+const funcionariosService = require("../../src/services/funcionariosService");
 const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -30,27 +30,27 @@ describe("Service: Funcionários", () => {
             });
 
             const res = await funcionariosService.registrarFuncionario({
-                email: "func@teste.com",
-                senha_hash: "123",
-                codigo_seguranca_hash: process.env.CHAVE_MESTRA_LOJA,
-                nome_completo: "Fulano",
-                data_nascimento: "2000-01-01",
-                endereco: "Rua A",
-                cpf: "12311111111",
+                email: "funcionario@example.com",
+                senha: "senha123",
+                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
+                nomeCompleto: "Funcionário Teste",
+                dataNascimento: "1990-01-01",
+                endereco: "Rua Teste",
+                cpf: "11111111111"
             });
 
             expect(db.query).toHaveBeenCalled();
-            expect(res.email).toBe("func@teste.com");
+            expect(res.email).toBe("funcionario@example.com");
         });
 
         it("deve falhar se código de segurança for incorreto", async () => {
             await expect(
                 funcionariosService.registrarFuncionario({
                     email: "func2@teste.com",
-                    senha_hash: "123",
-                    codigo_seguranca_hash: "errado",
-                    nome_completo: "Fulano",
-                    data_nascimento: "2000-01-01",
+                    senha: "123",
+                    codigoSeguranca: "errado",
+                    nomeCompleto: "Fulano",
+                    dataNascimento: "2000-01-01",
                     endereco: "Rua A",
                     cpf: "12311111112",
                 })
@@ -64,13 +64,13 @@ describe("Service: Funcionários", () => {
 
             await expect(
                 funcionariosService.registrarFuncionario({
-                    email: "func@teste.com",
-                    senha_hash: "123",
-                    codigo_seguranca_hash: process.env.CHAVE_MESTRA_LOJA,
-                    nome_completo: "Fulano",
-                    data_nascimento: "2000-01-01",
-                    endereco: "Rua A",
-                    cpf: "12311111111",
+                    email: "funcionario@example.com",
+                    senha: "senha123",
+                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
+                    nomeCompleto: "Funcionário Teste",
+                    dataNascimento: "1990-01-01",
+                    endereco: "Rua Teste",
+                    cpf: "11111111111"
                 })
             ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
         });
