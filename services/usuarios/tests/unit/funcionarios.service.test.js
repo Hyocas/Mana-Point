@@ -1,0 +1,215 @@
+const funcionariosService = require("../../src/services/funcionariosService");
+const db = require("../../src/db");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+jest.mock("../../src/db");
+jest.mock("bcryptjs");
+jest.mock("jsonwebtoken");
+
+describe("Service: Funcionários", () => {
+    
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe("registrarFuncionario()", () => {
+
+        it("deve falhar ao não enviar campos obrigatórios", async () => {
+            await expect(
+                funcionariosService.registrarFuncionario({ email:"a", senha:"b" })
+            ).rejects.toThrow("Todos os campos obrigatórios devem ser preenchidos.");
+        });
+
+        it("deve registrar funcionário com sucesso", async () => {
+            bcrypt.genSalt.mockResolvedValue("salt");
+            bcrypt.hash.mockResolvedValue("senhaHasheada");
+
+            db.query.mockResolvedValue({
+                rows: [{ id: 1, email: "func@teste.com" }]
+            });
+
+            const res = await funcionariosService.registrarFuncionario({
+                email: "func@teste.com",
+                senha: "123",
+                nomeCompleto: "Fulano",
+                cpf: "123",
+                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
+            });
+
+            expect(db.query).toHaveBeenCalled();
+            expect(res.email).toBe("func@teste.com");
+        });
+
+        it("deve falhar se código de segurança for incorreto", async () => {
+            await expect(
+                funcionariosService.registrarFuncionario({
+                    email: "func@teste.com",
+                    senha: "123",
+                    nomeCompleto: "Fulano",
+                    cpf: "123",
+                    codigoSeguranca: "errado"
+                })
+            ).rejects.toThrow("Código de segurança incorreto.");
+        });
+
+        it("deve lançar erro 409 ao tentar registrar duplicado", async () => {
+            const err = new Error();
+            err.code = "23505";
+            db.query.mockRejectedValue(err);
+
+            await expect(
+                funcionariosService.registrarFuncionario({
+                    email: "func@teste.com",
+                    senha: "123",
+                    nomeCompleto: "Fulano",
+                    cpf: "123",
+                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
+                })
+            ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
+        });
+    });
+
+    describe("loginFuncionario()", () => {
+
+        it("deve falhar ao faltar email ou senha", async () => {
+            await expect(
+                funcionariosService.loginFuncionario(null, "123")
+            ).rejects.toThrow("Email e senha são obrigatórios.");
+        });
+
+        it("deve falhar se funcionário não existir", async () => {
+            db.query.mockResolvedValue({ rows: [] });
+
+            await expect(
+                funcionariosService.loginFuncionario("x@x.com", "123")
+            ).rejects.toThrow("Credenciais inválidas.");
+        });
+
+        it("deve falhar com senha incorreta", async () => {
+            db.query.mockResolvedValue({
+                rows: [{ id: 1, senha_hash: "HASH" }]
+            });
+
+            bcrypt.compare.mockResolvedValue(false);
+
+            await expect(
+                funcionariosService.loginFuncionario("x@x.com", "123")
+            ).rejects.toThrow("Credenciais inválidas.");
+        });
+
+        it("deve retornar token válido", async () => {
+            db.query.mockResolvedValue({
+                rows: [{ id: 1, email: "func@x.com", senha_hash: "HASH" }]
+            });
+
+            bcrypt.compare.mockResolvedValue(true);
+            jwt.sign.mockReturnValue("TOKENFUNC123");
+
+            const res = await funcionariosService.loginFuncionario("func@x.com", "123");
+
+            expect(res).toBe("TOKENFUNC123");
+        });
+    });
+
+    describe("validarTokenFuncionario()", () => {
+
+        it("deve falhar se token não for enviado", () => {
+            expect(() => funcionariosService.validarTokenFuncionario(null))
+                .toThrow("Token ausente.");
+        });
+
+        it("deve falhar se token não pertencer a funcionário", () => {
+            jwt.verify.mockReturnValue({ cargo: "usuario" });
+
+            expect(() => funcionariosService.validarTokenFuncionario("token"))
+                .toThrow("Token não pertence a funcionário.");
+        });
+
+        it("deve falhar em token inválido", () => {
+            jwt.verify.mockImplementation(() => { throw new Error(); });
+
+            expect(() => funcionariosService.validarTokenFuncionario("abc"))
+                .toThrow("Token inválido.");
+        });
+
+        it("deve retornar token decodificado", () => {
+            jwt.verify.mockReturnValue({ id: 10, cargo: "funcionario" });
+
+            const decoded = funcionariosService.validarTokenFuncionario("VALIDO");
+
+            expect(decoded).toEqual({ id: 10, cargo: "funcionario" });
+        });
+    });
+
+    describe("buscarPerfilFuncionario()", () => {
+
+        it("deve retornar perfil", async () => {
+            db.query.mockResolvedValue({ rows: [{ id: 1, nome: "Fulano" }] });
+
+            const perfil = await funcionariosService.buscarPerfilFuncionario(1);
+
+            expect(perfil.id).toBe(1);
+        });
+
+        it("deve retornar null se não existir", async () => {
+            db.query.mockResolvedValue({ rows: [] });
+
+            const perfil = await funcionariosService.buscarPerfilFuncionario(99);
+
+            expect(perfil).toBe(null);
+        });
+    });
+
+    describe("atualizarPerfilFuncionario()", () => {
+
+        it("deve falhar sem senha atual", async () => {
+            await expect(
+                funcionariosService.atualizarPerfilFuncionario(
+                    1,
+                    {},
+                    "HASH_ATUAL"
+                )
+            ).rejects.toThrow("É necessário informar a senha atual para confirmar as alterações.");
+        });
+
+        it("deve falhar com senha atual incorreta", async () => {
+            bcrypt.compare.mockResolvedValue(false);
+
+            await expect(
+                funcionariosService.atualizarPerfilFuncionario(
+                    1,
+                    { senhaAtual: "errada" },
+                    "HASH"
+                )
+            ).rejects.toThrow("A senha atual está incorreta.");
+        });
+
+        it("deve atualizar sem trocar senha", async () => {
+            bcrypt.compare.mockResolvedValue(true);
+            db.query.mockResolvedValue({});
+
+            const result = await funcionariosService.atualizarPerfilFuncionario(
+                1,
+                { senhaAtual: "correta" },
+                "HASH"
+            );
+
+            expect(result).toBe(true);
+        });
+
+        it("deve atualizar trocando a senha", async () => {
+            bcrypt.compare.mockResolvedValue(true);
+            bcrypt.genSalt.mockResolvedValue("salt");
+            bcrypt.hash.mockResolvedValue("NOVOHASH");
+
+            const result = await funcionariosService.atualizarPerfilFuncionario(
+                1,
+                { senhaAtual: "atual", novaSenha: "123" },
+                "HASHVELHO"
+            );
+
+            expect(result).toBe(true);
+        });
+    });
+});
