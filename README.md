@@ -1,41 +1,83 @@
-# E-commerce de Cartas - Projeto de Sistemas Distribuídos
+# Manapoint - E-commerce de Card Games
 
-## Descrição
+<p align="center">
+  <img src="./frontend/public/logo-transparente.png" alt="Logo ManaPoint" width="250"/>
+</p>
 
-Este projeto é um sistema de e-commerce para a compra e venda de cartas colecionáveis, desenvolvido para a disciplina de Sistemas Distribuídos. A arquitetura foi projetada utilizando um modelo de microsserviços na nuvem AWS, focando em escalabilidade, tolerância a falhas e desacoplamento.
+O **Manapoint** é uma plataforma de e-commerce distribuída e baseada em microsserviços, especializada na compra e venda de cartas colecionáveis (Yu-Gi-Oh!). Desenvolvido para a disciplina de Engenharia de Software e Sistemas Distribuídos, o projeto foca em escalabilidade, desacoplamento e robustez.
 
-## Arquitetura Proposta
+O sistema se diferencia pela **integração automática com a API externa YGOProDeck**, permitindo o povoamento dinâmico do catálogo, além de implementar padrões de resiliência e observabilidade completa.
 
-A solução utiliza uma arquitetura moderna e coesa, baseada nos seguintes serviços e tecnologias da AWS:
+## Arquitetura e Tecnologias
 
-* **Middleware:** Elastic Load Balancing (ALB), AWS Cloud Map
-* **Virtualização:** Docker, ECS com Fargate
-* **Comunicação:** API Gateway, REST, Amazon SQS
-* **Nomeação:** Route 53
-* **Banco de Dados:** Amazon Aurora (PostgreSQL)
-* **Tolerância a Falhas:** Health Checks, ECS Service Auto Scaling, CloudWatch Alarms
-* **Segurança:** Amazon Cognito, JWT, TLS, AWS KMS
+A solução utiliza uma arquitetura de microsserviços containerizada, orquestrada via Docker Compose para desenvolvimento e preparada para implantação em nuvem (AWS).
 
-*(https://docs.google.com/document/d/1aFgZAJ70XRf536KjZPcr71ky2JfjTSXAkjaOY5Pd4gY/edit?tab=t.0#heading=h.ddx9t545013z)*
+* **Linguagem & Framework:** Node.js com Express.
+* **Gateway & Proxy Reverso:** Nginx.
+* **Banco de Dados:** PostgreSQL.
+* **Comunicação:** Síncrona via HTTP/REST (Axios).
+* **Segurança:**
+    * Autenticação via JWT.
+    * Hashing de senhas com Bcrypt.
+    * Headers de segurança com Helmet.
+* **Resiliência & Tolerância a Falhas:**
+    * *Retry Pattern* (axios-retry) para chamadas externas.
+    * *Deep Health Checks* para verificação de dependências.
+    * Transações de Banco de Dados.
+* **Observabilidade:**
+    * **Prometheus:** Coleta de métricas técnicas e de negócio.
+    * **Grafana:** Visualização de dashboards em tempo real.
 
-## Funcionalidades Planejadas
+## Funcionalidades
 
-* [ ] Cadastro e Autenticação de Usuários
-* [ ] Catálogo de Cartas (visualização e busca)
-* [ ] Sistema de Carrinho de Compras
-* [ ] Finalização de Pedido (Checkout)
-* [ ] Histórico de Pedidos do Usuário
+* [x] **Gestão de Identidade:** Cadastro e autenticação segura de clientes e funcionários.
+* [x] **Catálogo Inteligente:** Busca local e importação automática de cartas via API externa (YGOProDeck).
+* [x] **Carrinho de Compras:** Gestão de itens com validação de estoque em tempo real.
+* [x] **Checkout Transacional:** Processamento de pedidos com baixa atômica de estoque.
+* [x] **Monitoramento:** Dashboards de vendas, latência e saúde dos serviços.
 
 ## Como Executar
 
-*(Esta seção será preenchida futuramente)*
+### Pré-requisitos
+* [Docker](https://www.docker.com/) e Docker Compose instalados.
 
-```sh
-# Instruções de setup e execução do projeto serão adicionadas aqui.
-```
+### Passo a Passo
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/seu-usuario/manapoint.git](https://github.com/seu-usuario/manapoint.git)
+    cd manapoint
+    ```
+
+2.  **Configure as Variáveis de Ambiente:**
+    Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo (ajuste as senhas se desejar):
+
+    ```env
+    # Configurações do Banco de Dados
+    DB_HOST=db
+    DB_PORT=5432
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
+    POSTGRES_DB=manapoint_db
+    DB_SSL=false
+
+    # Segurança (Token JWT)
+    JWT_SECRET=sua_chave_secreta_super_segura
+    ```
+
+3.  **Suba a aplicação:**
+    ```bash
+    docker compose up --build -d
+    ```
+
+4.  **Acesse os Serviços:**
+    * **API Gateway (Frontend):** `http://localhost:80`
+    * **Grafana (Monitoramento):** `http://localhost:3005` (Login: admin / Senha: admin)
+    * **Prometheus:** `http://localhost:9090`
 
 ## Membros da Equipe
 
 * [Gabriel Mendonca]
+* [Jeanluca Caleare]
 * [Leandro Balbino]
 * [Yago Armand]
