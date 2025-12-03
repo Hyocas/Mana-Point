@@ -1,4 +1,4 @@
-const funcionariosService = require("../../src/services/funcionariosService");
+const funcionariosService = require("../../src/services/funcionarioService");
 const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
