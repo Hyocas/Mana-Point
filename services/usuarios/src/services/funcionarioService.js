@@ -13,7 +13,7 @@ module.exports = {
         }
 
         if (codigoSeguranca !== chaveMestra) {
-            const e = new Error("Código de segurança da loja incorreto.");
+            const e = new Error("Código de segurança da loja incorreto. Você não tem permissão para registrar uma conta de funcionário.");
             e.status = 403;
             throw e;
         }
@@ -47,7 +47,7 @@ module.exports = {
     async loginFuncionario(email, senha) {
 
         if (!email || !senha) {
-            const e = new Error("Email e senha são obrigatórios.");
+            const e = new Error("Email e senha e são obrigatórios.");
             e.status = 400;
             throw e;
         }
@@ -117,7 +117,7 @@ module.exports = {
         const { nomeCompleto, dataNascimento, endereco, novaSenha, senhaAtual } = body;
 
         if (!senhaAtual) {
-            const e = new Error("É necessário informar a senha atual.");
+            const e = new Error("É necessário informar a senha atual para confirmar as alterações.");
             e.status = 400;
             throw e;
         }

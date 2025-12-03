@@ -52,6 +52,10 @@ module.exports = {
                 return res.status(404).json({ message: "Funcionário não encontrado." });
             }
 
+            if (req.usuario.cargo !== "funcionario") {
+                return res.status(403).json({ message: "Acesso restrito a funcionários." });
+            }
+
             res.json(perfil);
 
         } catch (_) {

@@ -41,7 +41,7 @@ module.exports = {
     async loginUsuario(email, senha) {
 
         if (!email || !senha) {
-            const e = new Error("Email e senhas são obrigatórios.");
+            const e = new Error("Email e senhas e são obrigatórios.");
             e.status = 400;
             throw e;
         }
@@ -103,7 +103,7 @@ module.exports = {
         const { nomeCompleto, dataNascimento, endereco, novaSenha, senhaAtual } = body;
 
         if (!senhaAtual) {
-            const e = new Error("É necessário informar a senha atual.");
+            const e = new Error("É necessário informar a senha atual para confirmar as alterações.");
             e.status = 400;
             throw e;
         }
