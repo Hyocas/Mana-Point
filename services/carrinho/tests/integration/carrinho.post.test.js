@@ -50,15 +50,19 @@ describe("Logs do Carrinho (POST /api/carrinho)", () => {
       data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
     });
 
-    jest.spyOn(require("../../src/db"), "query")
-      .mockRejectedValue(new Error("DB FAIL"));
+    const db = require("../../src/db");
+
+    jest.spyOn(db.pool, "connect").mockResolvedValue({
+      query: jest.fn().mockRejectedValue(new Error("DB FAIL")),
+      release: jest.fn()
+    });
 
     await request(app)
       .post("/api/carrinho")
       .set("Authorization", "Bearer token")
       .send({ produto_id: 1, quantidade: 1 });
 
-    expect(errorSpy).toHaveBeenCalled(); 
+    expect(errorSpy).toHaveBeenCalled();
     expect(errorSpy.mock.calls[0][0]).toContain("ERRO REAL");
   });
 
