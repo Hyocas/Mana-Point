@@ -96,15 +96,15 @@ router.post('/carrinho', validarToken, async (req, res) => {
             existingItem.id
             ]);
 
-        } else {
+            } else {
             const insertQuery =
-            'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
+                'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
 
             resultCarrinho = await client.query(insertQuery, [
-            usuarioId,
-            produto_id,
-            quantidade,
-            preco_unitario
+                usuarioId,
+                produto_id,
+                quantidade,
+                preco_unitario
             ]);
         }
 

@@ -49,7 +49,7 @@ describe("POST /api/carrinho", () => {
     await db.query(`
       INSERT INTO cartas 
       (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-      VALUES (1, 'Card', null, null, null, 'efeito', 20.00, 'img', 2)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 2)
     `);
 
     const res = await request(app)
@@ -66,7 +66,7 @@ describe("POST /api/carrinho", () => {
     await db.query(`
       INSERT INTO cartas 
       (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-      VALUES (1, 'Card', null, null, null, 'efeito', 20.00, 'img', 5)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 5)
     `);
 
     const res = await request(app)
