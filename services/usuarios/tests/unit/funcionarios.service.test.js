@@ -32,11 +32,12 @@ describe("Service: Funcionários", () => {
             const res = await funcionariosService.registrarFuncionario({
                 email: "funcionario@example.com",
                 senha: "senha123",
-                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
                 nomeCompleto: "Funcionário Teste",
                 dataNascimento: "1990-01-01",
                 endereco: "Rua Teste",
-                cpf: "11111111111"
+                cpf: "11111111111",
+                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
+                chaveMestra: process.env.CHAVE_MESTRA_LOJA
             });
 
             expect(db.query).toHaveBeenCalled();
@@ -46,13 +47,14 @@ describe("Service: Funcionários", () => {
         it("deve falhar se código de segurança for incorreto", async () => {
             await expect(
                 funcionariosService.registrarFuncionario({
-                    email: "func2@teste.com",
-                    senha: "123",
-                    codigoSeguranca: "errado",
-                    nomeCompleto: "Fulano",
-                    dataNascimento: "2000-01-01",
-                    endereco: "Rua A",
-                    cpf: "12311111112",
+                    email: "funcionario@example.com",
+                    senha: "senha123",
+                    nomeCompleto: "Funcionário Teste",
+                    dataNascimento: "1990-01-01",
+                    endereco: "Rua Teste",
+                    cpf: "11111111111",
+                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
+                    chaveMestra: "CODIGO_ERRADO"
                 })
             ).rejects.toThrow("Código de segurança incorreto.");
         });
@@ -66,11 +68,12 @@ describe("Service: Funcionários", () => {
                 funcionariosService.registrarFuncionario({
                     email: "funcionario@example.com",
                     senha: "senha123",
-                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
                     nomeCompleto: "Funcionário Teste",
                     dataNascimento: "1990-01-01",
                     endereco: "Rua Teste",
-                    cpf: "11111111111"
+                    cpf: "11111111111",
+                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
+                    chaveMestra: process.env.CHAVE_MESTRA_LOJA
                 })
             ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
         });
