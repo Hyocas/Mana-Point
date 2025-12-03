@@ -60,6 +60,10 @@ module.exports = {
                 return res.status(404).json({ message: "Usuário não encontrado." });
             }
 
+            if (req.usuario.cargo !== "usuario") {
+                return res.status(403).json({ message: "Acesso restrito a usuários." });
+            }
+
             const senhaHashAtual = resultSenha.rows[0].senha_hash;
 
             await usuarioService.atualizarPerfil(req.usuario.id, req.body, senhaHashAtual);
