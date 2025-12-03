@@ -82,30 +82,14 @@ router.post('/carrinho', validarToken, async (req, res) => {
 
             if (estoqueAtual < novaQuantidade) {
                 await client.query('ROLLBACK');
-                return res.status(400).json({
-                    message: `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`
-                });
+                return res.status(400).json({message: `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`});
             }
 
-            const updateQuery =
-            'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
-
-            resultCarrinho = await client.query(updateQuery, [
-            novaQuantidade,
-            preco_unitario,
-            existingItem.id
-            ]);
-
-            } else {
-            const insertQuery =
-                'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
-
-            resultCarrinho = await client.query(insertQuery, [
-                usuarioId,
-                produto_id,
-                quantidade,
-                preco_unitario
-            ]);
+            const updateQuery = 'UPDATE carrinho_itens SET quantidade = $1, preco_unitario = $2 WHERE id = $3 RETURNING *';
+            resultCarrinho = await client.query(updateQuery, [novaQuantidade, preco_unitario, existingItem.id]);
+        } else { 
+            const insertQuery = 'INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario) VALUES ($1, $2, $3, $4) RETURNING *';
+            resultCarrinho = await client.query(insertQuery, [usuarioId, produto_id, quantidade, preco_unitario]);
         }
 
         await client.query('COMMIT');
@@ -114,7 +98,6 @@ router.post('/carrinho', validarToken, async (req, res) => {
         return res.status(201).json(resultCarrinho.rows[0]);
 
     } catch (error) {
-        console.error("ERRO REAL:", error);
         await client.query('ROLLBACK');
         if (error.code === '23505' && error.constraint === 'uniq_carrinho_usuario_produto') {
             return res.status(409).json({message: 'Este item já está sendo adicionado ao carrinho. Tente atualizar a quantidade.'});

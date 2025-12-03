@@ -10,6 +10,13 @@ describe("POST /api/carrinho", () => {
   beforeEach(async () => {
     await db.query("DELETE FROM carrinho_itens;");
     await db.query("DELETE FROM cartas;");
+    await db.query("DELETE FROM usuarios;");
+
+    await db.query(`
+      INSERT INTO usuarios (id, nome, email, senha, cargo)
+      VALUES (1, 'Teste', 'teste@teste.com', '123', 'cliente')
+    `);
+
     jest.clearAllMocks();
   });
 
@@ -21,7 +28,9 @@ describe("POST /api/carrinho", () => {
   });
 
   it("403 → funcionário não pode comprar", async () => {
-    axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"funcionario"}} });
+    axios.post.mockResolvedValue({
+      data:{ valido:true, usuario:{ id:1, cargo:"funcionario" } }
+    });
 
     const res = await request(app)
       .post("/api/carrinho")
@@ -32,7 +41,9 @@ describe("POST /api/carrinho", () => {
   });
 
   it("400 → campos obrigatórios não enviados", async () => {
-    axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"cliente"}} });
+    axios.post.mockResolvedValue({
+      data:{valido:true,usuario:{id:1,cargo:"cliente"}}
+    });
 
     const res = await request(app)
       .post("/api/carrinho")
@@ -44,12 +55,14 @@ describe("POST /api/carrinho", () => {
   });
 
   it("400 → estoque insuficiente", async () => {
-    axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"cliente"}} });
+    axios.post.mockResolvedValue({
+      data:{valido:true,usuario:{id:1,cargo:"cliente"}}
+    });
 
     await db.query(`
       INSERT INTO cartas 
       (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 2)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20.00, 'img', 2)
     `);
 
     const res = await request(app)
@@ -61,12 +74,14 @@ describe("POST /api/carrinho", () => {
   });
 
   it("201 → adiciona ao carrinho com sucesso", async () => {
-    axios.post.mockResolvedValue({ data:{valido:true,usuario:{id:1,cargo:"cliente"}} });
+    axios.post.mockResolvedValue({
+      data:{valido:true,usuario:{id:1,cargo:"cliente"}}
+    });
 
     await db.query(`
       INSERT INTO cartas 
       (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-      VALUES (1, 'Card', null, null, null, 'efeito', 20, 'img', 5)
+      VALUES (1, 'Card', null, null, null, 'efeito', 20.00, 'img', 5)
     `);
 
     const res = await request(app)
