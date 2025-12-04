@@ -1,9 +1,6 @@
-const catalogoService = require('../../src/services/catalogoService');
-const db = require('../../src/db');
-const axios = require('axios');
-
-jest.mock('../../src/db');
 jest.mock('axios');
+jest.mock('../../src/db');
+
 jest.mock('axios-retry', () => {
   const mockRetry = jest.fn();
   mockRetry.exponentialDelay = jest.fn(() => 100);
@@ -11,6 +8,10 @@ jest.mock('axios-retry', () => {
 });
 
 jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
+
+const catalogoService = require('../../src/services/catalogoService');
+const axios = require('axios');
+const db = require('../../src/db');
 
 jest.mock('../../src/services/catalogoService', () => {
   const original = jest.requireActual('../../src/services/catalogoService');
