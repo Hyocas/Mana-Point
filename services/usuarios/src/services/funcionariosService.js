@@ -13,7 +13,7 @@ module.exports = {
         }
 
         if (codigoSeguranca !== chaveMestra) {
-            const e = new Error("Código de segurança da loja incorreto. Você não tem permissão para registrar uma conta de funcionário.");
+            const e = new Error("Código de segurança incorreto.");
             e.status = 403;
             throw e;
         }
@@ -36,7 +36,7 @@ module.exports = {
 
         } catch (error) {
             if (error.code === '23505') {
-                const e = new Error("Este E-mail ou CPF já está em uso por outro funcionário.");
+                const e = new Error("Este e-mail ou CPF já está em uso por outro funcionário.");
                 e.status = 409;
                 throw e;
             }
