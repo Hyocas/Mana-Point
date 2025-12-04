@@ -306,13 +306,19 @@ module.exports = {
 
     try {
       const result = await db.query('SELECT * FROM cartas WHERE id = $1', [cardId]);
+
       if (result.rows.length === 0) {
         const e = new Error('Carta não encontrada.');
         e.status = 404;
         throw e;
       }
+
       return result.rows[0];
     } catch (err) {
+      if (err.status) {
+        throw err;
+      }
+
       console.error(`[catalogo_api] Erro ao buscar carta ID ${cardId}:`, err.message);
       const e = new Error('Erro interno do servidor.');
       e.status = 500;
