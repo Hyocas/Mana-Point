@@ -27,9 +27,10 @@ jobs:
           npm ci
 
       - name: Run unit tests (usuarios)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
-          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-          export CHAVE_MESTRA_LOJA="${{ secrets.CHAVE_MESTRA_LOJA }}"
           cd services/usuarios
           npm run test:unit
 
