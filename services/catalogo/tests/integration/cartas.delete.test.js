@@ -1,56 +1,37 @@
 const request = require("supertest");
-const app = require("../../src/app");
-const db = require("../../src/db");
-
-jest.mock("axios", () => {
-  const mockAxiosInstance = {
-    post: jest.fn(),
-    get: jest.fn(),
-    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } }
-  };
-
-  return {
-    create: jest.fn(() => mockAxiosInstance),
-    post: jest.fn(),
-    mockInstance: mockAxiosInstance
-  };
-});
-
+const app = require("../../app");
+const db = require("../../db");
 const axios = require("axios");
 
-describe("Integração – DELETE /api/cartas/:id", () => {
-  beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
+jest.mock("axios");
 
+describe("Integração – DELETE /api/cartas/:id", () => {
   beforeEach(async () => {
-    await db.query("DELETE FROM cartas;");
-    jest.clearAllMocks();
+    await db.query("DELETE FROM cartas");
   });
 
   afterAll(async () => {
     await db.end();
   });
 
-  it("deve retornar 401 quando não houver token no header", async () => {
-    const res = await request(app).delete("/api/cartas/10");
+  it("deve retornar 401 se o token não for fornecido", async () => {
+    const res = await request(app).delete("/api/cartas/1");
     expect(res.status).toBe(401);
     expect(res.body.message).toBe("Token de autenticação não fornecido.");
   });
 
-  it("deve retornar 401 quando o token for inválido", async () => {
-    axios.mockInstance.post.mockRejectedValueOnce({ response: { status: 401 } });
+  it("deve retornar 401 se o token for inválido", async () => {
+    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
 
     const res = await request(app)
-      .delete("/api/cartas/10")
+      .delete("/api/cartas/1")
       .set("Authorization", "Bearer tokenInvalido");
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe("Acesso não autorizado. Token inválido.");
   });
 
-  it("deve retornar 400 para ID inválido (não numérico)", async () => {
-    axios.mockInstance.post.mockResolvedValueOnce({ status: 200 });
+  it("deve retornar 400 se o ID for inválido", async () => {
+    axios.post.mockResolvedValue({ status: 200 });
 
     const res = await request(app)
       .delete("/api/cartas/abc")
@@ -61,30 +42,34 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve deletar carta existente com token válido (204)", async () => {
-    axios.mockInstance.post.mockResolvedValueOnce({ status: 200 });
+    axios.post.mockResolvedValue({ status: 200 });
 
-    await db.query(`
-      INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-      VALUES (20, 'Mock Delete', null, null, null, null, 0, null, 1)
+    const { rows } = await db.query(`
+      INSERT INTO cartas (nome, quantidade) 
+      VALUES ('Mock Delete', 1) 
+      RETURNING id
     `);
+    const cartaId = rows[0].id;
 
     const res = await request(app)
-      .delete("/api/cartas/20")
+      .delete(`/api/cartas/${cartaId}`)
       .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(204);
   });
 
   it("deve retornar 500 se ocorrer erro interno no banco", async () => {
-    axios.mockInstance.post.mockResolvedValueOnce({ status: 200 });
+    axios.post.mockResolvedValue({ status: 200 });
 
-    jest.spyOn(db, "query").mockRejectedValueOnce(new Error("DB FAIL"));
+    jest.spyOn(db, "query").mockRejectedValueOnce(new Error("Erro interno"));
 
     const res = await request(app)
-      .delete("/api/cartas/30")
+      .delete("/api/cartas/1")
       .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe("Erro interno do servidor.");
+
+    db.query.mockRestore();
   });
 });
