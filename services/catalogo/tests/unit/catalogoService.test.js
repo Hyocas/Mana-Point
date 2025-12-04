@@ -13,15 +13,7 @@ const catalogoService = require('../../src/services/catalogoService');
 const axios = require('axios');
 const db = require('../../src/db');
 
-jest.mock('../../src/services/catalogoService', () => {
-  const original = jest.requireActual('../../src/services/catalogoService');
-  return {
-    ...original,
-    __esModule: true,
-    default: original,
-    sleep: jest.fn().mockResolvedValue()
-  };
-});
+catalogoService.sleep = jest.fn().mockResolvedValue();
 
 const mockCardAPI = {
   data: {
