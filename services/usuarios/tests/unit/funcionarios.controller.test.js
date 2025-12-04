@@ -103,7 +103,7 @@ describe("Controller: Funcionários", () => {
         it("deve retornar 404 se não existir", async () => {
             req.usuario = { id: 999, cargo: "funcionario" };
 
-            funcionariosService.buscarPerfilFuncionario.mockResolvedValue(null);
+            funcionariosService.buscarPerfil.mockResolvedValue(null);
 
             await funcionariosController.meuPerfil(req, res);
 
