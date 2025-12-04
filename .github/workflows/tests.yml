@@ -98,7 +98,34 @@ jobs:
           cd services/usuarios
           npm run test:int
 
-  catalogo-tests:
+  catalogo-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/catalogo/package-lock.json
+
+      - name: Install dependencies (catalogo)
+        run: |
+          cd services/catalogo
+          npm ci
+
+      - name: Run unit tests (catalogo)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+        run: |
+          cd services/catalogo
+          npm run test:unit
+
+  catalogo-integration-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -148,16 +175,18 @@ jobs:
           cd services/migrator
           node migrate.js
 
-      - name: Run tests
+      - name: Run integration tests (catalogo)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/catalogo
-          npm test
+          npm run test:int
 
   carrinho-tests:
     runs-on: ubuntu-latest

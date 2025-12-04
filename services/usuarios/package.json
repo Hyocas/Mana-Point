@@ -4,6 +4,7 @@
   "description": "Microsserviço de usuarios de Cartas",
   "main": "src/index.js",
   "scripts": {
+    "start": "node src/index.js",
     "test": "npm run test:unit && npm run test:int",
     "test:unit": "jest tests/unit --runInBand",
     "test:int": "jest tests/integration --runInBand"
