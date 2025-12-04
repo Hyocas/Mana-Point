@@ -3,6 +3,8 @@ const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE_MESTRA";
+
 jest.mock("../../src/db");
 jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
@@ -11,6 +13,7 @@ describe("Service: Funcionários", () => {
     
     beforeEach(() => {
         jest.clearAllMocks();
+        jwt.verify.mockReset();
     });
 
     describe("registrarFuncionario()", () => {
