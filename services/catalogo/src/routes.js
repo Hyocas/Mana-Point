@@ -31,13 +31,13 @@ router.get('/cartas/search', catalogoController.buscar);
 router.post('/cartas/ydk', catalogoController.processarYdk);
 
 // Listar todas as cartas (livre)
-router.get('/cartas', catalogoController.listarTodas);
+router.get('/cartas', catalogoController.listar);
 
 // Buscar por ID (livre)
 router.get('/cartas/:id', catalogoController.buscarPorId);
 
 // Remover todas as cartas (apenas autenticado)
-router.delete('/cartas', verificarToken, catalogoController.apagarTudo);
+router.delete('/cartas', verificarToken, catalogoController.apagarCatalogo);
 
 // Remover carta por ID (apenas autenticado)
 router.delete('/cartas/:id', verificarToken, catalogoController.apagarPorId);
