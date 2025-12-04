@@ -41,7 +41,7 @@ module.exports = {
         const apiRes = await apiClient.get(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${cardId}`);
         apiRequestCount++;
 
-        if (!apiRes.data || !apiRes.data.data || apiRes.data.data.length === 0) {
+        if (!apiRes?.data?.data || apiRes.data.data.length === 0) {
           continue;
         }
 
@@ -49,45 +49,53 @@ module.exports = {
         const id = carta.id;
         const nome = carta.name;
         const tipo = carta.type || null;
-        const ataque = carta.atk != null ? carta.atk : null;
-        const defesa = carta.def != null ? carta.def : null;
-        const efeito = carta.desc || null;
-        const preco = (carta.card_prices?.[0]?.cardmarket_price ? Number(carta.card_prices[0].cardmarket_price) : 0) * 5.37 || 0;
-        const imagem_url = carta.card_images?.[0]?.image_url || null;
+        const ataque = carta.atk ?? null;
+        const defesa = carta.def ?? null;
+        const efeito = carta.desc ?? null;
+        const preco = (carta.card_prices?.[0]?.cardmarket_price ? Number(carta.card_prices[0].cardmarket_price) : 0) * 5.37;
+        const imagem_url = carta.card_images?.[0]?.image_url ?? null;
         const quantidade = 0;
 
         const insert = await db.query(
           `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-           RETURNING *`,
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+          RETURNING *`,
           [id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade]
         );
 
         cartasProcessadas.push(insert.rows[0]);
 
       } catch (err) {
-        console.error(`[catalogo_api] Erro ao processar carta ${cardId}: ${err.message}`);
+        if (!err.status) err.status = 500;
+        console.error(`[catalogo_api] Erro ao processar carta ${cardId}:`, err.message);
       }
     }
 
     console.log('[catalogo_api] Todas as cartas foram processadas.');
 
-    const disponiveisQuery = `
-      SELECT id, nome, quantidade, preco
-      FROM cartas
-      WHERE id = ANY($1::int[])
-      AND quantidade > 0
-    `;
-    const disponiveisResult = await db.query(disponiveisQuery, [Object.keys(idCount).map(Number)]);
-    const disponiveis = disponiveisResult.rows;
+    try {
+      const disponiveisQuery = `
+        SELECT id, nome, quantidade, preco
+        FROM cartas
+        WHERE id = ANY($1::int[])
+        AND quantidade > 0
+      `;
+      const disponiveisResult = await db.query(disponiveisQuery, [Object.keys(idCount).map(Number)]);
+      const disponiveis = disponiveisResult.rows;
 
-    return {
-      message: 'Cartas processadas com sucesso.',
-      total: cartasProcessadas.length,
-      disponiveis,
-      idCount,
-      prompt: 'Deseja adicionar ao carrinho as cartas que estão disponíveis em estoque?'
-    };
+      return {
+        message: 'Cartas processadas com sucesso.',
+        total: cartasProcessadas.length,
+        disponiveis,
+        idCount,
+        prompt: 'Deseja adicionar ao carrinho as cartas que estão disponíveis em estoque?'
+      };
+    } catch (err) {
+      console.error('[catalogo_api] Erro ao buscar cartas disponíveis:', err.message);
+      const e = new Error('Erro ao processar a lista de cartas.');
+      e.status = 500;
+      throw e;
+    }
   },
 
   async buscarPorNomeOuEfeito(nome) {
