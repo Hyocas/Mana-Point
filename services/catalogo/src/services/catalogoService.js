@@ -1,9 +1,9 @@
 const db = require('../db');
 const axios = require('axios');
-const { axiosRetry, exponentialDelay } = require('axios-retry');
+const axiosRetry = require('axios-retry').default;
 
 const apiClient = axios.create({ timeout: 5000 });
-axiosRetry(apiClient, { retries: 3, retryDelay: exponentialDelay });
+axiosRetry(apiClient, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
