@@ -35,8 +35,11 @@ describe("Controller: Usuários", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
-                id: 1,
-                email: "a@a.com"
+                message: "Usuário criado com sucesso",
+                usuario: {
+                    id: 1,
+                    email: "a@a.com"
+                }
             });
         });
 
@@ -66,7 +69,9 @@ describe("Controller: Usuários", () => {
             await usuariosController.login(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({ token: "TOKEN123" });
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Login bem-sucedido!",
+                token: "TOKEN123" });
         });
 
         it("deve retornar falha do service", async () => {
@@ -84,7 +89,7 @@ describe("Controller: Usuários", () => {
         });
     });
 
-    describe("me()", () => {
+    describe("meuPerfil()", () => {
         it("deve retornar o perfil do usuário", async () => {
             req.usuarioId = 10;
 
@@ -92,7 +97,7 @@ describe("Controller: Usuários", () => {
                 id: 10, nome_completo: "Fulano"
             });
 
-            await usuariosController.me(req, res);
+            await usuariosController.meuPerfil(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -106,7 +111,7 @@ describe("Controller: Usuários", () => {
 
             usuariosService.buscarPerfil.mockResolvedValue(null);
 
-            await usuariosController.me(req, res);
+            await usuariosController.meuPerfil(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
             expect(res.json).toHaveBeenCalledWith({

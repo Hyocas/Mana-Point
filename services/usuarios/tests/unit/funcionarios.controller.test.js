@@ -75,7 +75,7 @@ describe("Controller: Funcionários", () => {
         });
     });
 
-    describe("me()", () => {
+    describe("meuPerfil()", () => {
         it("deve retornar perfil", async () => {
             req.usuarioId = 5;
 
@@ -84,7 +84,7 @@ describe("Controller: Funcionários", () => {
                 nome: "João"
             });
 
-            await funcionariosController.me(req, res);
+            await funcionariosController.meuPerfil(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -98,7 +98,7 @@ describe("Controller: Funcionários", () => {
 
             funcionariosService.buscarPerfilFuncionario.mockResolvedValue(null);
 
-            await funcionariosController.me(req, res);
+            await funcionariosController.meuPerfil(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
             expect(res.json).toHaveBeenCalledWith({
