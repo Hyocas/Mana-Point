@@ -1,4 +1,4 @@
-const funcionarioService = require('../services/funcionarioService');
+const funcionarioService = require('../services/funcionariosService');
 const db = require('../db');
 const CHAVE_MESTRA_LOJA = process.env.CHAVE_MESTRA_LOJA;
 
