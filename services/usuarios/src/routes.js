@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const usuarioController = require('./controllers/usuarioController');
-const funcionarioController = require('./controllers/funcionarioController');
+const usuarioController = require('./controllers/usuariosController');
+const funcionarioController = require('./controllers/funcionariosController');
 const jwt = require('jsonwebtoken');
 
 const verificarToken = (req, res, next) => {
