@@ -10,7 +10,7 @@ const mockResponse = () => {
   return res;
 };
 
-jest.mock('../services/catalogoService');
+jest.mock('../../src/services/catalogoService');
 
 describe('CatalogoController', () => {
 
