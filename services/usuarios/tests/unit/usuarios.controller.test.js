@@ -91,7 +91,7 @@ describe("Controller: Usuários", () => {
 
     describe("meuPerfil()", () => {
         it("deve retornar o perfil do usuário", async () => {
-            req.usuarioId = 10;
+            req.usuario.id = 10;
 
             usuariosService.buscarPerfil.mockResolvedValue({
                 id: 10, nome_completo: "Fulano"
