@@ -1,18 +1,19 @@
 const request = require('supertest');
 const app = require('../../src/app');
-const axios = require('axios');
 
 const mockAxiosInstance = {
   post: jest.fn(),
-  get: jest.fn(),
   delete: jest.fn(),
+  get: jest.fn(),
   interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
 };
 
-jest.mock('axios', () => ({
-  create: jest.fn(() => mockAxiosInstance),
-  ...jest.requireActual('axios'),
-}));
+jest.mock('axios', () => {
+  return {
+    create: jest.fn(() => mockAxiosInstance),
+    ...jest.requireActual('axios'),
+  };
+});
 
 describe('Integração – DELETE /api/cartas/:id', () => {
 
