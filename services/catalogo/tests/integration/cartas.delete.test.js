@@ -2,7 +2,6 @@ const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-// Mock do axios e axios.create (para lidar com axiosRetry)
 jest.mock("axios", () => {
   const mockAxiosInstance = {
     post: jest.fn(),
@@ -20,6 +19,9 @@ jest.mock("axios", () => {
 const axios = require("axios");
 
 describe("Integração – DELETE /api/cartas/:id", () => {
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
@@ -52,7 +54,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
 
     const res = await request(app)
       .delete("/api/cartas/abc")
-      .set("Authorization", "Bearer tokenFake");
+      .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe("O ID fornecido é inválido.");
@@ -68,7 +70,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
 
     const res = await request(app)
       .delete("/api/cartas/20")
-      .set("Authorization", "Bearer tokenFake");
+      .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(204);
   });
@@ -80,10 +82,9 @@ describe("Integração – DELETE /api/cartas/:id", () => {
 
     const res = await request(app)
       .delete("/api/cartas/30")
-      .set("Authorization", "Bearer tokenFake");
+      .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe("Erro interno do servidor.");
   });
-
 });
