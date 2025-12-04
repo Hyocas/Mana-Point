@@ -91,7 +91,7 @@ describe("Controller: Usuários", () => {
 
     describe("meuPerfil()", () => {
         it("deve retornar o perfil do usuário", async () => {
-            req.usuario.id = 10;
+            req.usuario = { id: 10 };
 
             usuariosService.buscarPerfil.mockResolvedValue({
                 id: 10, nome_completo: "Fulano"
@@ -107,7 +107,7 @@ describe("Controller: Usuários", () => {
         });
 
         it("deve retornar 404 se perfil não existir", async () => {
-            req.usuarioId = 999;
+            req.usuario = { id: 999 };
 
             usuariosService.buscarPerfil.mockResolvedValue(null);
 
