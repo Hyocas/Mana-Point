@@ -1,6 +1,8 @@
 const usuariosController = require("../../src/controllers/usuariosController");
 const usuariosService = require("../../src/services/usuariosService");
+const db = require("../../src/db");
 
+jest.mock("../../src/db");
 jest.mock("../../src/services/usuariosService");
 
 describe("Controller: Usuários", () => {
@@ -91,10 +93,11 @@ describe("Controller: Usuários", () => {
 
     describe("meuPerfil()", () => {
         it("deve retornar o perfil do usuário", async () => {
-            req.usuario = { id: 10 };
+            req.usuario = { id: 10, cargo: "usuario" };
 
             usuariosService.buscarPerfil.mockResolvedValue({
-                id: 10, nome_completo: "Fulano"
+                id: 10,
+                nome_completo: "Fulano"
             });
 
             await usuariosController.meuPerfil(req, res);
@@ -107,7 +110,7 @@ describe("Controller: Usuários", () => {
         });
 
         it("deve retornar 404 se perfil não existir", async () => {
-            req.usuario = { id: 999 };
+            req.usuario = { id: 999, cargo: "usuario" };
 
             usuariosService.buscarPerfil.mockResolvedValue(null);
 
@@ -122,8 +125,12 @@ describe("Controller: Usuários", () => {
 
     describe("atualizar()", () => {
         it("deve atualizar com sucesso", async () => {
-            req.usuarioId = 1;
+            req.usuario = { id: 1, cargo: "usuario" };
             req.body = { nomeCompleto: "X", senhaAtual: "123" };
+
+            db.query.mockResolvedValueOnce({
+                rows: [{ senha_hash: "HASH_ATUAL" }]
+            });
 
             usuariosService.atualizarPerfil.mockResolvedValue(true);
 
@@ -131,21 +138,27 @@ describe("Controller: Usuários", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: "Perfil atualizado com sucesso."
+                message: "Perfil atualizado com sucesso!"
             });
         });
 
         it("deve retornar erro do service", async () => {
+            req.usuario = { id: 1, cargo: "usuario" };
+
+            db.query.mockResolvedValueOnce({
+                rows: [{ senha_hash: "HASH_ATUAL" }]
+            });
+
             usuariosService.atualizarPerfil.mockRejectedValue({
-                status: 400,
-                message: "Senha atual incorreta."
+                status: 401,
+                message: "A senha atual está incorreta."
             });
 
             await usuariosController.atualizar(req, res);
 
-            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.status).toHaveBeenCalledWith(401);
             expect(res.json).toHaveBeenCalledWith({
-                message: "Senha atual incorreta."
+                message: "A senha atual está incorreta."
             });
         });
     });
