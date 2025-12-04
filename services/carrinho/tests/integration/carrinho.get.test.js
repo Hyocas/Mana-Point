@@ -64,19 +64,15 @@ describe("Logs do Carrinho (GET /api/carrinho)", () => {
       data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
     });
 
-    const mockQuery = jest.fn().mockRejectedValue(new Error("ERRO REAL"));
-
-    jest.spyOn(db.pool, "connect").mockResolvedValue({
-      query: mockQuery,
-      release: jest.fn()
-    });
-
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
-    await request(app)
+    jest.spyOn(db, "query").mockRejectedValue(new Error("ERRO REAL"));
+
+    const res = await request(app)
       .get("/api/carrinho/1")
       .set("Authorization", "Bearer tokenValido");
 
+    expect(res.status).toBe(500);
     expect(errorSpy).toHaveBeenCalled();
     expect(errorSpy.mock.calls[0][0]).toContain("[GET /carrinho/:id]");
   });
