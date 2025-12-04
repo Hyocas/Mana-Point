@@ -96,7 +96,7 @@ jobs:
           CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/usuarios
-          npm run test:integration
+          npm run test:int
 
   catalogo-tests:
     runs-on: ubuntu-latest

@@ -3,13 +3,17 @@ const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE_MESTRA";
+process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE";
 
 jest.mock("../../src/db");
 jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
 
 describe("Service: Funcionários", () => {
+
+    beforeAll(() => {
+        process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE";
+    });
     
     beforeEach(() => {
         jest.clearAllMocks();
@@ -39,7 +43,7 @@ describe("Service: Funcionários", () => {
                 dataNascimento: "1990-01-01",
                 endereco: "Rua Teste",
                 cpf: "11111111111",
-                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
+                codigoSeguranca: "TESTE_CHAVE"
             });
 
             expect(db.query).toHaveBeenCalled();
