@@ -324,5 +324,46 @@ module.exports = {
       e.status = 500;
       throw e;
     }
+  },
+  async apagarCartaPorId(id, token) {
+    if (!token) {
+      const e = new Error('Token obrigatório.');
+      e.status = 401;
+      throw e;
+    }
+
+    let cardId = parseInt(id);
+    if (Number.isNaN(cardId)) {
+      const e = new Error('ID inválido.');
+      e.status = 400;
+      throw e;
+    }
+
+    try {
+      const tokenRes = await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
+      if (!tokenRes?.data?.valido) {
+        const e = new Error('Token inválido.');
+        e.status = 401;
+        throw e;
+      }
+
+      const result = await db.query('DELETE FROM cartas WHERE id = $1 RETURNING *', [cardId]);
+
+      if (result.rows.length === 0) {
+        const e = new Error('Carta não encontrada.');
+        e.status = 404;
+        throw e;
+      }
+
+      return result.rows[0];
+
+    } catch (err) {
+      console.error('[catalogo_api] Erro ao apagar carta:', err.message);
+      if (err.status) throw err;
+      const e = new Error('Erro interno ao apagar carta.');
+      e.status = 500;
+      throw e;
+    }
   }
+
 };
