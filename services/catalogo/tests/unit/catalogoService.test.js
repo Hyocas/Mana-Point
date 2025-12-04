@@ -52,7 +52,10 @@ describe('catalogoService.processarYdk', () => {
 
   test('deve retornar cartas do banco sem chamar API', async () => {
     db.query.mockResolvedValueOnce({
-      rows: [{ id: 1, nome: "Carta do DB" }]
+      rows: [{ id: 1, nome: "Carta 1 do DB" }]
+    })
+    .mockResolvedValueOnce({
+      rows: [{ id: 2, nome: "Carta 2 do DB" }]
     });
 
     const result = await catalogoService.processarYdk([1]);
