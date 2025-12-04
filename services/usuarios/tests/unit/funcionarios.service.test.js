@@ -148,12 +148,12 @@ describe("Service: Funcionários", () => {
         });
     });
 
-    describe("buscarPerfilFuncionario()", () => {
+    describe("buscarPerfil()", () => {
 
         it("deve retornar perfil", async () => {
             db.query.mockResolvedValue({ rows: [{ id: 1, nome: "Fulano" }] });
 
-            const perfil = await funcionariosService.buscarPerfilFuncionario(1);
+            const perfil = await funcionariosService.buscarPerfil(1);
 
             expect(perfil.id).toBe(1);
         });
@@ -161,17 +161,17 @@ describe("Service: Funcionários", () => {
         it("deve retornar null se não existir", async () => {
             db.query.mockResolvedValue({ rows: [] });
 
-            const perfil = await funcionariosService.buscarPerfilFuncionario(99);
+            const perfil = await funcionariosService.buscarPerfil(99);
 
             expect(perfil).toBe(null);
         });
     });
 
-    describe("atualizarPerfilFuncionario()", () => {
+    describe("atualizar()", () => {
 
         it("deve falhar sem senha atual", async () => {
             await expect(
-                funcionariosService.atualizarPerfilFuncionario(
+                funcionariosService.atualizar(
                     1,
                     {},
                     "HASH_ATUAL"
@@ -183,7 +183,7 @@ describe("Service: Funcionários", () => {
             bcrypt.compare.mockResolvedValue(false);
 
             await expect(
-                funcionariosService.atualizarPerfilFuncionario(
+                funcionariosService.atualizar(
                     1,
                     { senhaAtual: "errada" },
                     "HASH"
@@ -195,7 +195,7 @@ describe("Service: Funcionários", () => {
             bcrypt.compare.mockResolvedValue(true);
             db.query.mockResolvedValue({});
 
-            const result = await funcionariosService.atualizarPerfilFuncionario(
+            const result = await funcionariosService.atualizar(
                 1,
                 { senhaAtual: "correta" },
                 "HASH"
@@ -209,7 +209,7 @@ describe("Service: Funcionários", () => {
             bcrypt.genSalt.mockResolvedValue("salt");
             bcrypt.hash.mockResolvedValue("NOVOHASH");
 
-            const result = await funcionariosService.atualizarPerfilFuncionario(
+            const result = await funcionariosService.atualizar(
                 1,
                 { senhaAtual: "atual", novaSenha: "123" },
                 "HASHVELHO"

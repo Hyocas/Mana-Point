@@ -64,7 +64,7 @@ describe("Service: Usuários", () => {
 
         it("deve lançar erro se faltar email ou senha", async () => {
             await expect(usuariosService.loginUsuario(null, "123"))
-                .rejects.toThrow("Email e senhas e são obrigatórios.");
+                .rejects.toThrow("Email e senhas são obrigatórios.");
         });
 
         it("deve falhar se usuário não existir", async () => {
