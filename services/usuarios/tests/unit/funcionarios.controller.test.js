@@ -17,7 +17,7 @@ describe("Controller: Funcionários", () => {
 
     describe("registrar()", () => {
         it("deve registrar funcionário com sucesso", async () => {
-            req.body = { email: "func@x.com", senha: "123", codigoSeguranca: "AAA" };
+            req.body = { email: "func@x.com", senha: "123", codigoSeguranca: process.env.CHAVE_MESTRA_LOJA };
 
             funcionariosService.registrarFuncionario.mockResolvedValue({
                 id: 1,
@@ -28,8 +28,11 @@ describe("Controller: Funcionários", () => {
 
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
-                id: 1,
-                email: "func@x.com"
+                funcionario: {
+                    id: 1,
+                    email: "func@x.com"
+                },
+                message: "Funcionário registrado com sucesso!"
             });
         });
 
@@ -57,7 +60,9 @@ describe("Controller: Funcionários", () => {
             await funcionariosController.login(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({ token: "TOKENFUNC" });
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Login de funcionário bem-sucedido!",
+                token: "TOKENFUNC" });
         });
 
         it("deve retornar erro retornado pelo service", async () => {
@@ -77,10 +82,10 @@ describe("Controller: Funcionários", () => {
 
     describe("meuPerfil()", () => {
         it("deve retornar perfil", async () => {
-            req.usuarioId = 5;
+            req.usuario = { id: 10, cargo: "funcionario" };
 
             funcionariosService.buscarPerfilFuncionario.mockResolvedValue({
-                id: 5,
+                id: 10,
                 nome: "João"
             });
 
@@ -88,13 +93,13 @@ describe("Controller: Funcionários", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                id: 5,
+                id: 10,
                 nome: "João"
             });
         });
 
         it("deve retornar 404 se não existir", async () => {
-            req.usuarioId = 5;
+            req.usuario = { id: 999, cargo: "funcionario" };
 
             funcionariosService.buscarPerfilFuncionario.mockResolvedValue(null);
 
@@ -109,8 +114,12 @@ describe("Controller: Funcionários", () => {
 
     describe("atualizar()", () => {
         it("deve atualizar com sucesso", async () => {
-            req.usuarioId = 1;
-            req.body = { senhaAtual: "123" };
+            req.usuario = { id: 10, cargo: "funcionario" };
+            req.body = { nomeCompleto: "X", senhaAtual: "123" };
+
+            db.query.mockResolvedValueOnce({
+                rows: [{ senha_hash: "HASH_ATUAL" }]
+            });
 
             funcionariosService.atualizarPerfilFuncionario.mockResolvedValue(true);
 
@@ -118,21 +127,27 @@ describe("Controller: Funcionários", () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: "Perfil de funcionário atualizado com sucesso."
+                message: "Perfil atualizado com sucesso!"
             });
         });
 
         it("deve retornar erro do service", async () => {
+            req.usuario = { id: 10, cargo: "funcionario" };
+
+            db.query.mockResolvedValueOnce({
+                rows: [{ senha_hash: "HASH_ATUAL" }]
+            });
+
             funcionariosService.atualizarPerfilFuncionario.mockRejectedValue({
                 status: 401,
-                message: "Senha atual incorreta."
+                message: "A senha atual está incorreta."
             });
 
             await funcionariosController.atualizar(req, res);
 
             expect(res.status).toHaveBeenCalledWith(401);
             expect(res.json).toHaveBeenCalledWith({
-                message: "Senha atual incorreta."
+                message: "A senha atual está incorreta."
             });
         });
     });

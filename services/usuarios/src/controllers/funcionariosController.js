@@ -84,7 +84,7 @@ module.exports = {
                 resultSenha.rows[0].senha_hash
             );
 
-            res.json({ message: "Perfil atualizado com sucesso!" });
+            res.status(200).json({ message: "Perfil atualizado com sucesso!" });
 
         } catch (error) {
             res.status(error.status || 500).json({ message: error.message });
