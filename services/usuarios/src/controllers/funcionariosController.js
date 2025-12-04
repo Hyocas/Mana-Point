@@ -56,7 +56,7 @@ module.exports = {
                 return res.status(403).json({ message: "Rota exclusiva para funcionários." });
             }
 
-            res.json(perfil);
+            res.status(200).json(perfil);
 
         } catch (_) {
             res.status(500).json({ message: "Erro ao buscar perfil." });
