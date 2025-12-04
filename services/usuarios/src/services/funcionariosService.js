@@ -97,7 +97,13 @@ module.exports = {
             }
 
             return decoded;
-        } catch (_) {
+
+        } catch (err) {
+
+            if (err.message === "Token não pertence a funcionário.") {
+                throw err;
+            }
+
             const e = new Error("Token inválido.");
             e.status = 401;
             throw e;
