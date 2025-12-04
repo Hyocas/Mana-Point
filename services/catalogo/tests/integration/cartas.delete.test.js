@@ -1,24 +1,9 @@
-jest.mock("axios", () => {
-  const mockAxiosInstance = {
-    get: jest.fn(),
-    post: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
-    }
-  };
-
-  return {
-    create: () => mockAxiosInstance,
-    post: jest.fn(),
-    mockInstance: mockAxiosInstance
-  };
-});
-
 const axios = require("axios");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
+
+jest.mock("axios");
 
 describe("Integração – DELETE /api/cartas/:id", () => {
 
@@ -38,7 +23,11 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve retornar 401 quando o token for inválido", async () => {
-    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
+    axios.post.mockImplementationOnce(() => {
+      const error = new Error("Acesso não autorizado. Token inválido.");
+      error.status = 401;
+      return Promise.reject(error);
+    });
 
     const res = await request(app)
       .delete("/api/cartas/10")
@@ -60,7 +49,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve deletar carta existente com token válido (204)", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValueOnce({ status: 200 });
 
     await db.query(`
       INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)

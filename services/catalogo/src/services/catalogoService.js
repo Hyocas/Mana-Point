@@ -325,6 +325,7 @@ module.exports = {
       throw e;
     }
   },
+  
   async apagarCartaPorId(id, token) {
     if (!token) {
       const e = new Error('Token de autenticação não fornecido.');
