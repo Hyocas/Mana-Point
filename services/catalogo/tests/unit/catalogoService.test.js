@@ -7,11 +7,11 @@ jest.mock('axios-retry', () => {
   return mockRetry;
 });
 
-jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
-
 const catalogoService = require('../../src/services/catalogoService');
 const axios = require('axios');
 const db = require('../../src/db');
+
+jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
 
 catalogoService.sleep = jest.fn().mockResolvedValue();
 
