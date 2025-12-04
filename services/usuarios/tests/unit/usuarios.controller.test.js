@@ -1,7 +1,7 @@
 const usuariosController = require("../../src/controllers/usuariosController");
-const usuariosService = require("../../src/services/usuarioService");
+const usuariosService = require("../../src/services/usuariosService");
 
-jest.mock("../../src/services/usuarioService");
+jest.mock("../../src/services/usuariosService");
 
 describe("Controller: Usuários", () => {
     let req, res;
