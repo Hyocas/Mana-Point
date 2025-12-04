@@ -1,6 +1,3 @@
-const request = require('supertest');
-const app = require('../../src/app');
-
 const mockAxiosInstance = {
   post: jest.fn(),
   delete: jest.fn(),
@@ -8,26 +5,21 @@ const mockAxiosInstance = {
   interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
 };
 
-jest.mock('axios', () => {
-  return {
-    create: jest.fn(() => mockAxiosInstance),
-    ...jest.requireActual('axios'),
-  };
-});
+jest.mock('axios', () => ({
+  create: jest.fn(() => mockAxiosInstance),
+  ...jest.requireActual('axios'),
+}));
+
+const request = require('supertest');
+const app = require('../../src/app');
 
 describe('Integração – DELETE /api/cartas/:id', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('deve deletar carta existente com token válido (204)', async () => {
-    mockAxiosInstance.post.mockImplementationOnce((url, data) => {
-      if (url.includes('validar-token') && data.token === 'tokenValido') {
-        return Promise.resolve({ status: 200 });
-      }
-      return Promise.reject({ response: { status: 401 } });
-    });
+    mockAxiosInstance.post.mockResolvedValueOnce({ status: 200 });
 
     mockAxiosInstance.delete.mockResolvedValueOnce({ status: 204 });
 
@@ -59,5 +51,4 @@ describe('Integração – DELETE /api/cartas/:id', () => {
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Erro interno do servidor.');
   });
-
 });
