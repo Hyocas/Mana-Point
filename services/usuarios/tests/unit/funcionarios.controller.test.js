@@ -1,6 +1,8 @@
 const funcionariosController = require("../../src/controllers/funcionariosController");
 const funcionariosService = require("../../src/services/funcionariosService");
+const db = require("../../src/db");
 
+jest.mock("../../src/db");
 jest.mock("../../src/services/funcionariosService");
 
 describe("Controller: Funcionários", () => {
