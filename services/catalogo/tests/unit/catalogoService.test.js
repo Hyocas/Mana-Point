@@ -1,10 +1,11 @@
 jest.mock('axios');
 jest.mock('../../src/db');
 
-jest.mock('axios-retry', () => ({
-  axiosRetry: jest.fn(),
-  exponentialDelay: jest.fn(() => 100)
-}));
+jest.mock('axios-retry', () => {
+  const mockFn = jest.fn();
+  mockFn.exponentialDelay = jest.fn(() => 100);
+  return mockFn;
+});
 
 const catalogoService = require('../../src/services/catalogoService');
 const axios = require('axios');
