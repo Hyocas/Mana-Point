@@ -3,17 +3,11 @@ const db = require("../../src/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE";
-
 jest.mock("../../src/db");
 jest.mock("bcryptjs");
 jest.mock("jsonwebtoken");
 
 describe("Service: Funcionários", () => {
-
-    beforeAll(() => {
-        process.env.CHAVE_MESTRA_LOJA = "TESTE_CHAVE";
-    });
     
     beforeEach(() => {
         jest.clearAllMocks();
@@ -36,15 +30,18 @@ describe("Service: Funcionários", () => {
                 rows: [{ id: 1, email: "funcionario@example.com" }]
             });
 
-            const res = await funcionariosService.registrarFuncionario({
-                email: "funcionario@example.com",
-                senha: "senha123",
-                nomeCompleto: "Funcionário Teste",
-                dataNascimento: "1990-01-01",
-                endereco: "Rua Teste",
-                cpf: "11111111111",
-                codigoSeguranca: "TESTE_CHAVE"
-            });
+            const res = await funcionariosService.registrarFuncionario(
+                {
+                    email: "funcionario@example.com",
+                    senha: "senha123",
+                    nomeCompleto: "Funcionário Teste",
+                    dataNascimento: "1990-01-01",
+                    endereco: "Rua Teste",
+                    cpf: "11111111111"
+                },
+                process.env.CHAVE_MESTRA_LOJA,
+                process.env.CHAVE_MESTRA_LOJA
+            );
 
             expect(db.query).toHaveBeenCalled();
             expect(res.email).toBe("funcionario@example.com");
@@ -52,15 +49,18 @@ describe("Service: Funcionários", () => {
 
         it("deve falhar se código de segurança for incorreto", async () => {
             await expect(
-                funcionariosService.registrarFuncionario({
+                funcionariosService.registrarFuncionario(
+                   {
                     email: "funcionario@example.com",
                     senha: "senha123",
                     nomeCompleto: "Funcionário Teste",
                     dataNascimento: "1990-01-01",
                     endereco: "Rua Teste",
-                    cpf: "11111111111",
-                    codigoSeguranca: "CODIGO_ERRADO"
-                })
+                    cpf: "11111111111"
+                },
+                process.env.CHAVE_MESTRA_LOJA,
+                "CODIGO_ERRADO"
+                )
             ).rejects.toThrow("Código de segurança incorreto.");
         });
 
@@ -70,15 +70,18 @@ describe("Service: Funcionários", () => {
             db.query.mockRejectedValue(err);
 
             await expect(
-                funcionariosService.registrarFuncionario({
+                funcionariosService.registrarFuncionario(
+                    {
                     email: "funcionario@example.com",
                     senha: "senha123",
                     nomeCompleto: "Funcionário Teste",
                     dataNascimento: "1990-01-01",
                     endereco: "Rua Teste",
-                    cpf: "11111111111",
-                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
-                })
+                    cpf: "11111111111"
+                },
+                process.env.CHAVE_MESTRA_LOJA,
+                process.env.CHAVE_MESTRA_LOJA
+                )
             ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
         });
     });
