@@ -188,16 +188,23 @@ module.exports = {
       throw e;
     }
 
+    let tokenRes;
     try {
-      await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
-    } catch (error) {
-      console.error('[catalogo_api] Erro na validação do token:', error.message);
+      tokenRes = await axios.post('http://usuarios_api:3000/api/usuarios/validar-token', { token });
+    } catch (err) {
+      console.error('[catalogo_api] Erro na validação do token:', err.message);
       const e = new Error('Acesso não autorizado. Token inválido.');
       e.status = 401;
       throw e;
     }
 
-    if (!nome) {
+    if (!tokenRes?.data?.valido) {
+      const e = new Error('Acesso não autorizado. Token inválido.');
+      e.status = 401;
+      throw e;
+    }
+
+    if (!nome || nome.trim() === '') {
       const e = new Error('O nome da carta é obrigatório.');
       e.status = 400;
       throw e;
@@ -212,11 +219,19 @@ module.exports = {
       };
     }
 
-    const apiRes = await apiClient.get(
-      `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
-    );
+    let apiRes;
+    try {
+      apiRes = await apiClient.get(
+        `https://db.ygoprodeck.com/api/v7/cardinfo.php?name=${encodeURIComponent(nome)}`
+      );
+    } catch (err) {
+      console.error('[catalogo_api] Erro ao acessar YGOProDeck:', err.message);
+      const e = new Error('Erro ao consultar a API YGOProDeck.');
+      e.status = 500;
+      throw e;
+    }
 
-    if (!apiRes.data || !apiRes.data.data || apiRes.data.data.length === 0) {
+    if (!apiRes?.data?.data || apiRes.data.data.length === 0) {
       const e = new Error('Carta não encontrada na API YGOProDeck.');
       e.status = 404;
       throw e;
@@ -232,11 +247,19 @@ module.exports = {
     const preco = (carta.card_prices?.[0]?.cardmarket_price ? Number(carta.card_prices[0].cardmarket_price) : 0) * 5.37 || 0;
     const imagemUrl = carta.card_images?.[0]?.image_url || null;
 
-    const insert = await db.query(
-      `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
-    );
+    let insert;
+    try {
+      insert = await db.query(
+        `INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+        [id, nomeCarta, tipo, ataque, defesa, efeito, preco, imagemUrl, quantidade || 0]
+      );
+    } catch (err) {
+      console.error('[catalogo_api] Erro ao inserir carta no DB:', err.message);
+      const e = new Error('Erro interno ao adicionar carta.');
+      e.status = 500;
+      throw e;
+    }
 
     return insert.rows[0];
   },
