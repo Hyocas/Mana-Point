@@ -86,7 +86,7 @@ describe("Controller: Funcionários", () => {
         it("deve retornar perfil", async () => {
             req.usuario = { id: 10, cargo: "funcionario" };
 
-            funcionariosService.buscarPerfilFuncionario.mockResolvedValue({
+            funcionariosService.buscarPerfil.mockResolvedValue({
                 id: 10,
                 nome: "João"
             });
@@ -123,7 +123,7 @@ describe("Controller: Funcionários", () => {
                 rows: [{ senha_hash: "HASH_ATUAL" }]
             });
 
-            funcionariosService.atualizarPerfilFuncionario.mockResolvedValue(true);
+            funcionariosService.atualizar.mockResolvedValue(true);
 
             await funcionariosController.atualizar(req, res);
 
@@ -140,7 +140,7 @@ describe("Controller: Funcionários", () => {
                 rows: [{ senha_hash: "HASH_ATUAL" }]
             });
 
-            funcionariosService.atualizarPerfilFuncionario.mockRejectedValue({
+            funcionariosService.atualizar.mockRejectedValue({
                 status: 401,
                 message: "A senha atual está incorreta."
             });
