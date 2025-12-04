@@ -41,7 +41,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 401 se o token for inválido", async () => {
-    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
+    axios.post.mockResolvedValue({
+      data: { valido: false, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    //axios.post.mockRejectedValueOnce({ response: { status: 401 } });
 
     const res = await request(app)
       .post("/api/cartas")
@@ -53,7 +56,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 400 se o nome não for enviado", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    //axios.post.mockResolvedValue({ status: 200 });
 
     const res = await request(app)
       .post("/api/cartas")
@@ -65,7 +71,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 200 se a carta já existir no sistema", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    //axios.post.mockResolvedValue({ status: 200 });
 
     await db.query(`
       INSERT INTO cartas (id, nome, tipo, quantidade, preco)
@@ -83,7 +92,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve criar carta via API corretamente (201)", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    // axios.post.mockResolvedValue({ status: 200 });
 
     axios.create().get.mockResolvedValue({
       data: {
@@ -112,7 +124,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 404 quando a carta não existir na API", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    //axios.post.mockResolvedValue({ status: 200 });
 
     axios.create().get.mockResolvedValue({ data: { data: [] } });
 
@@ -126,7 +141,10 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 500 em caso de erro inesperado ao cadastrar", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "funcionario" } }
+    });
+    //axios.post.mockResolvedValue({ status: 200 });
     jest.spyOn(db, "query").mockRejectedValueOnce(new Error("DB FAIL"));
 
     const res = await request(app)

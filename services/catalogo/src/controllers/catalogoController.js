@@ -52,7 +52,7 @@ module.exports = {
 
   async adicionar(req, res) {
     const tokenHeader = req.headers.authorization;
-    const token = tokenHeader.split(' ')[1];
+    const token = tokenHeader ? tokenHeader.split(' ')[1] : null;
     const { nome, quantidade } = req.body;
 
     try {
