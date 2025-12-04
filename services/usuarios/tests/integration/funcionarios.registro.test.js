@@ -59,7 +59,7 @@ describe("Integração - Registro de Funcionários", () => {
 
     expect(res.statusCode).toBe(403);
     expect(res.body.message).toBe(
-      "Código de segurança da loja incorreto. Você não tem permissão para registrar uma conta de funcionário."
+      "Código de segurança incorreto."
     );
   });
 
@@ -81,7 +81,7 @@ describe("Integração - Registro de Funcionários", () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.body.message)
-      .toBe("Este E-mail ou CPF já está em uso por outro funcionário.");
+      .toBe("Este e-mail ou CPF já está em uso por outro funcionário.");
   });
 
 });

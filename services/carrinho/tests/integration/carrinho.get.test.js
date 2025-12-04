@@ -51,7 +51,7 @@ describe("Logs do Carrinho (GET /api/carrinho)", () => {
     });
 
     const res = await request(app)
-      .get("/api/carrinho")
+      .get("/api/carrinho/1")
       .set("Authorization", "Bearer tokenValido");
 
     expect(res.status).toBe(200);
@@ -59,7 +59,7 @@ describe("Logs do Carrinho (GET /api/carrinho)", () => {
     expect(res.body.length).toBe(2);
 
     expect(consoleSpy).toHaveBeenCalled();
-    expect(consoleSpy.mock.calls.some(c => c[0].includes("[GET /carrinho]"))).toBe(true);
+    expect(consoleSpy.mock.calls.some(c => c[0].includes("[GET /carrinho/1]"))).toBe(true);
   });
 
   it("deve logar erro real no bloco catch (console.error) ao falhar no DB", async () => {
@@ -85,7 +85,7 @@ describe("Logs do Carrinho (GET /api/carrinho)", () => {
     }
 
     expect(errorSpy).toHaveBeenCalled();
-    expect(errorSpy.mock.calls[0][0]).toContain("ERRO REAL");
+    expect(errorSpy.mock.calls[0][0]).toContain("Erro:");
   });
 
 });
