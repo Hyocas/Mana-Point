@@ -1,23 +1,18 @@
-const axios = require("axios");
 const request = require("supertest");
 const app = require("../../src/app");
 const db = require("../../src/db");
 
-jest.mock("axios", () => {
-  const actualAxios = jest.requireActual("axios");
-  return {
-    ...actualAxios,
-    create: jest.fn(() => ({
-      get: jest.fn(),
-      post: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
-      },
-    })),
-    post: jest.fn(),
-  };
-});
+const mockAxiosInstance = {
+  post: jest.fn(),
+  get: jest.fn(),
+  interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } }
+};
+
+jest.mock("axios", () => ({
+  create: jest.fn(() => mockAxiosInstance),
+  post: jest.fn(),
+  mockInstance: mockAxiosInstance
+}));
 
 describe("Integração – DELETE /api/cartas/:id", () => {
 
@@ -37,7 +32,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve retornar 401 quando o token for inválido", async () => {
-    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
+    mockAxiosInstance.post.mockRejectedValueOnce({ response: { status: 401 } });
 
     const res = await request(app)
       .delete("/api/cartas/10")
@@ -48,7 +43,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve retornar 400 para ID inválido (não numérico)", async () => {
-    axios.post.mockResolvedValueOnce({ status: 200 });
+    mockAxiosInstance.post.mockResolvedValueOnce({ status: 200 });
 
     const res = await request(app)
       .delete("/api/cartas/abc")
@@ -59,7 +54,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve deletar carta existente com token válido (204)", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    mockAxiosInstance.post.mockResolvedValueOnce({ status: 200 });
 
     await db.query(`
       INSERT INTO cartas (id, nome, tipo, ataque, defesa, efeito, preco, imagem_url, quantidade)
@@ -74,7 +69,7 @@ describe("Integração – DELETE /api/cartas/:id", () => {
   });
 
   it("deve retornar 500 se ocorrer erro interno no banco", async () => {
-    axios.post.mockResolvedValueOnce({ status: 200 });
+    mockAxiosInstance.post.mockResolvedValueOnce({ status: 200 });
     jest.spyOn(db, "query").mockRejectedValueOnce(new Error("DB FAIL"));
 
     const res = await request(app)
