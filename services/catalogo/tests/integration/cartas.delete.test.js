@@ -32,7 +32,7 @@ describe('Integração – DELETE /api/cartas/:id', () => {
 
     const res = await request(app)
       .delete('/api/cartas/12345')
-      .set('Authorization', 'tokenValido');
+      .set('Authorization', 'Bearer tokenValido');
 
     expect(res.status).toBe(204);
   });
@@ -42,7 +42,7 @@ describe('Integração – DELETE /api/cartas/:id', () => {
 
     const res = await request(app)
       .delete('/api/cartas/12345')
-      .set('Authorization', 'tokenInvalido');
+      .set('Authorization', 'Bearer tokenInvalido');
 
     expect(res.status).toBe(401);
   });
@@ -53,7 +53,7 @@ describe('Integração – DELETE /api/cartas/:id', () => {
 
     const res = await request(app)
       .delete('/api/cartas/12345')
-      .set('Authorization', 'tokenValido');
+      .set('Authorization', 'Bearer tokenValido');
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Erro interno do servidor.');
