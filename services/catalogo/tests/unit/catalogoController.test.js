@@ -1,5 +1,5 @@
-const catalogoController = require('../controllers/catalogoController');
-const catalogoService = require('../services/catalogoService');
+const catalogoController = require('../../src/controllers/catalogoController');
+const catalogoService = require('../../src/services/catalogoService');
 
 const mockRequest = (data = {}) => data;
 const mockResponse = () => {

@@ -2,13 +2,11 @@ const catalogoService = require('../../src/services/catalogoService');
 const db = require('../../src/db');
 const axios = require('axios');
 
-// Mocks globais
 jest.mock('../../src/db');
 jest.mock('axios');
 
 jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
 
-// Mock do sleep
 jest.mock('../../src/services/catalogoService', () => {
   const original = jest.requireActual('../../src/services/catalogoService');
   return {
@@ -19,7 +17,6 @@ jest.mock('../../src/services/catalogoService', () => {
   };
 });
 
-// Utilitário de resposta da API YGO
 const mockCardAPI = {
   data: {
     data: [
@@ -57,13 +54,13 @@ describe('catalogoService.processarYdk', () => {
     const result = await catalogoService.processarYdk([1]);
 
     expect(result.total).toBe(1);
-    expect(db.query).toHaveBeenCalledTimes(2); // 1 busca + 1 consulta final
+    expect(db.query).toHaveBeenCalledTimes(2);
   });
 
   test('deve chamar API quando carta não está no banco', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [] })      // Não existe no DB
-      .mockResolvedValueOnce({ rows: [] });     // Consulta de disponíveis
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
 
     axios.get.mockResolvedValue(mockCardAPI);
 
@@ -93,8 +90,8 @@ describe('catalogoService.buscarPorNomeOuEfeito', () => {
 
   test('deve retornar cartas encontradas no banco por nome', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [{ id: 10, nome: "Blue-Eyes" }] }) // nome
-      .mockResolvedValueOnce({ rows: [] }); // efeito
+      .mockResolvedValueOnce({ rows: [{ id: 10, nome: "Blue-Eyes" }] })
+      .mockResolvedValueOnce({ rows: [] });
 
     const result = await catalogoService.buscarPorNomeOuEfeito("blue");
 
@@ -104,8 +101,8 @@ describe('catalogoService.buscarPorNomeOuEfeito', () => {
 
   test('deve buscar na API quando DB não retornar nada', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [] })  // nome
-      .mockResolvedValueOnce({ rows: [] }); // efeito
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
     axios.get.mockResolvedValue(mockCardAPI);
 
     db.query.mockResolvedValueOnce({
@@ -119,8 +116,8 @@ describe('catalogoService.buscarPorNomeOuEfeito', () => {
 
   test('deve lançar erro 404 quando nenhum resultado encontrado', async () => {
     db.query
-      .mockResolvedValueOnce({ rows: [] }) // nome
-      .mockResolvedValueOnce({ rows: [] }); // efeito
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
 
     axios.get.mockRejectedValue(new Error("not found"));
 
@@ -193,7 +190,7 @@ describe('catalogoService.adicionarCartaPorNome', () => {
 
   test('deve inserir carta nova', async () => {
     axios.post.mockResolvedValue({ data: { valido: true }});
-    db.query.mockResolvedValueOnce({ rows: [] }); // não existe no DB
+    db.query.mockResolvedValueOnce({ rows: [] });
 
     axios.get.mockResolvedValue(mockCardAPI);
 
