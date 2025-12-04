@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const catalogoController = require('../controllers/catalogoController');
+const catalogoController = require('./controllers/catalogoController');
 const jwt = require('jsonwebtoken');
 
 const verificarToken = (req, res, next) => {
