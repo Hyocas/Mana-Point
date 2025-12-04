@@ -7,12 +7,18 @@ jest.mock('axios-retry', () => {
   return mockFn;
 });
 
-const catalogoService = require('../../src/services/catalogoService');
 const axios = require('axios');
 const db = require('../../src/db');
 
+const mockApiClient = {
+  get: jest.fn(),
+};
+
+axios.create.mockReturnValue(mockApiClient);
+
 jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));
 
+const catalogoService = require('../../src/services/catalogoService');
 catalogoService.sleep = jest.fn().mockResolvedValue();
 
 const mockCardAPI = {
@@ -53,6 +59,7 @@ describe('catalogoService.processarYdk', () => {
 
     expect(result.total).toBe(1);
     expect(db.query).toHaveBeenCalledTimes(2);
+    expect(mockApiClient.get).not.toHaveBeenCalled();
   });
 
   test('deve chamar API quando carta não está no banco', async () => {
@@ -60,20 +67,19 @@ describe('catalogoService.processarYdk', () => {
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
 
-    axios.get.mockResolvedValue(mockCardAPI);
+    mockApiClient.get.mockResolvedValue(mockCardAPI);
 
     db.query.mockResolvedValueOnce({
-      rows: [ { id: 123, nome: "Dark Magician" } ]
+      rows: [{ id: 123, nome: "Dark Magician" }]
     });
 
     const result = await catalogoService.processarYdk([123]);
 
-    expect(axios.get).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.get).toHaveBeenCalledTimes(1);
     expect(result.total).toBe(1);
   });
 
 });
-
 
 describe('catalogoService.buscarPorNomeOuEfeito', () => {
 
@@ -101,7 +107,8 @@ describe('catalogoService.buscarPorNomeOuEfeito', () => {
     db.query
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
-    axios.get.mockResolvedValue(mockCardAPI);
+
+    mockApiClient.get.mockResolvedValue(mockCardAPI);
 
     db.query.mockResolvedValueOnce({
       rows: [{ id: 123, nome: "Dark Magician" }]
@@ -117,14 +124,13 @@ describe('catalogoService.buscarPorNomeOuEfeito', () => {
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
 
-    axios.get.mockRejectedValue(new Error("not found"));
+    mockApiClient.get.mockRejectedValue(new Error("not found"));
 
     await expect(catalogoService.buscarPorNomeOuEfeito("aaaaaaa"))
       .rejects.toMatchObject({ status: 404 });
   });
 
 });
-
 
 describe('catalogoService.listarCartas', () => {
 
@@ -139,7 +145,6 @@ describe('catalogoService.listarCartas', () => {
   });
 
 });
-
 
 describe('catalogoService.buscarCartaPorId', () => {
 
@@ -167,7 +172,6 @@ describe('catalogoService.buscarCartaPorId', () => {
 
 });
 
-
 describe('catalogoService.adicionarCartaPorNome', () => {
 
   test('deve falhar sem token', async () => {
@@ -176,7 +180,7 @@ describe('catalogoService.adicionarCartaPorNome', () => {
   });
 
   test('deve retornar carta já existente', async () => {
-    axios.post.mockResolvedValue({ data: { valido: true }});
+    axios.post.mockResolvedValue({ data: { valido: true } });
     db.query.mockResolvedValueOnce({
       rows: [{ id: 5, nome: "Dark Magician" }]
     });
@@ -187,10 +191,10 @@ describe('catalogoService.adicionarCartaPorNome', () => {
   });
 
   test('deve inserir carta nova', async () => {
-    axios.post.mockResolvedValue({ data: { valido: true }});
+    axios.post.mockResolvedValue({ data: { valido: true } });
     db.query.mockResolvedValueOnce({ rows: [] });
 
-    axios.get.mockResolvedValue(mockCardAPI);
+    mockApiClient.get.mockResolvedValue(mockCardAPI);
 
     db.query.mockResolvedValueOnce({
       rows: [{ id: 123, nome: "Dark Magician" }]
@@ -199,11 +203,10 @@ describe('catalogoService.adicionarCartaPorNome', () => {
     const result = await catalogoService.adicionarCartaPorNome("Dark", 1, "token123");
 
     expect(result.id).toBe(123);
-    expect(axios.get).toHaveBeenCalled();
+    expect(mockApiClient.get).toHaveBeenCalled();
   });
 
 });
-
 
 describe('catalogoService.apagarCatalogo', () => {
 
@@ -222,7 +225,6 @@ describe('catalogoService.apagarCatalogo', () => {
   });
 
 });
-
 
 describe('catalogoService.apagarCartaPorId', () => {
 
