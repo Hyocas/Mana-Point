@@ -17,7 +17,7 @@ describe("Service: Funcionários", () => {
 
         it("deve falhar ao não enviar campos obrigatórios", async () => {
             await expect(
-                funcionariosService.registrarFuncionario({ email:"a", senha:"b" })
+                funcionariosService.registrarFuncionario({ email: "a", senha: "b" })
             ).rejects.toThrow("Todos os campos são obrigatórios.");
         });
 
@@ -26,7 +26,7 @@ describe("Service: Funcionários", () => {
             bcrypt.hash.mockResolvedValue("senhaHasheada");
 
             db.query.mockResolvedValue({
-                rows: [{ id: 1, email: "func@teste.com" }]
+                rows: [{ id: 1, email: "funcionario@example.com" }]
             });
 
             const res = await funcionariosService.registrarFuncionario({
@@ -36,8 +36,7 @@ describe("Service: Funcionários", () => {
                 dataNascimento: "1990-01-01",
                 endereco: "Rua Teste",
                 cpf: "11111111111",
-                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
-                chaveMestra: process.env.CHAVE_MESTRA_LOJA
+                codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
             });
 
             expect(db.query).toHaveBeenCalled();
@@ -53,8 +52,7 @@ describe("Service: Funcionários", () => {
                     dataNascimento: "1990-01-01",
                     endereco: "Rua Teste",
                     cpf: "11111111111",
-                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
-                    chaveMestra: "CODIGO_ERRADO"
+                    codigoSeguranca: "CODIGO_ERRADO"
                 })
             ).rejects.toThrow("Código de segurança incorreto.");
         });
@@ -72,8 +70,7 @@ describe("Service: Funcionários", () => {
                     dataNascimento: "1990-01-01",
                     endereco: "Rua Teste",
                     cpf: "11111111111",
-                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA,
-                    chaveMestra: process.env.CHAVE_MESTRA_LOJA
+                    codigoSeguranca: process.env.CHAVE_MESTRA_LOJA
                 })
             ).rejects.toThrow("Este e-mail ou CPF já está em uso por outro funcionário.");
         });
@@ -129,13 +126,13 @@ describe("Service: Funcionários", () => {
         });
 
         it("deve falhar se token não pertencer a funcionário", () => {
-            jwt.verify.mockReturnValue({ cargo: "usuario" });
+            jwt.verify.mockReturnValue({ id: 1, cargo: "usuario" });
 
             expect(() => funcionariosService.validarTokenFuncionario("token"))
                 .toThrow("Token não pertence a funcionário.");
         });
 
-        it("deve falhar em token inválido", () => {
+        it("deve falhar se token for inválido", () => {
             jwt.verify.mockImplementation(() => { throw new Error(); });
 
             expect(() => funcionariosService.validarTokenFuncionario("abc"))
