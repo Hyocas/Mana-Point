@@ -65,7 +65,6 @@ module.exports = {
 
       const cartaRows = cartaResult?.rows ?? [];
       if (cartaRows.length === 0) {
-        await client.query("ROLLBACK");
         const e = new Error("Produto não encontrado no catálogo.");
         e.status = 400;
         throw e;
@@ -76,7 +75,6 @@ module.exports = {
       const preco_unitario = carta.preco;
 
       if (estoqueAtual < quantidade) {
-        await client.query("ROLLBACK");
         const e = new Error("Estoque insufienciente para a quantidade solicitada.");
         e.status = 400;
         throw e;
@@ -95,7 +93,6 @@ module.exports = {
         const novaQuantidade = existingItem.quantidade + quantidade;
 
         if (estoqueAtual < novaQuantidade) {
-          await client.query("ROLLBACK");
           const e = new Error(
             `Estoque insuficiente. Você já tem ${existingItem.quantidade} no carrinho e o estoque total é ${estoqueAtual}.`
           );
@@ -120,6 +117,10 @@ module.exports = {
     } catch (err) {
       console.error("ERRO REAL:", err);
       await client.query("ROLLBACK");
+
+      if (err?.status) {
+        throw err;
+      }
 
       if (err?.code === "23505") {
         const e = new Error("Este item já está sendo adicionado ao carrinho. Tente atualizar a quantidade.");
@@ -146,6 +147,11 @@ module.exports = {
 
     } catch (err) {
       console.error(`[GET /carrinho/:id] Erro: ${err.message}`);
+
+      if (err?.status) {
+        throw err;
+      }
+
       const e = new Error("Erro interno do servidor ao buscar itens do carrinho.");
       e.status = 500;
       throw e;
@@ -171,7 +177,6 @@ module.exports = {
       const itemRows = itemResult?.rows ?? [];
 
       if (itemRows.length === 0) {
-        await client.query("ROLLBACK");
         const e = new Error("Item do carrinho não encontrado ou não pertence a este usuário.");
         e.status = 404;
         throw e;
@@ -187,7 +192,6 @@ module.exports = {
       const cartaRows = cartaResult?.rows ?? [];
 
       if (cartaRows.length === 0) {
-        await client.query("ROLLBACK");
         const e = new Error("Erro: Produto associado ao carrinho não encontrado no catálogo.");
         e.status = 500;
         throw e;
@@ -196,7 +200,6 @@ module.exports = {
       const estoqueAtual = cartaRows[0].quantidade;
 
       if (novaQuantidade > estoqueAtual) {
-        await client.query("ROLLBACK");
         const e = new Error(`Estoque insuficiente. Apenas ${estoqueAtual} unidades disponíveis.`);
         e.status = 400;
         throw e;
@@ -212,6 +215,11 @@ module.exports = {
 
     } catch (err) {
       await client.query("ROLLBACK");
+
+      if (err?.status) {
+        throw err;
+      }
+
       const e = new Error("Erro interno do servidor ao processar atualização do carrinho.");
       e.status = 500;
       throw e;
@@ -235,7 +243,6 @@ module.exports = {
       const rows = itemResult?.rows ?? [];
 
       if (rows.length === 0) {
-        await client.query("ROLLBACK");
         const e = new Error("Item do carrinho não encontrado ou não pertence a este usuário.");
         e.status = 404;
         throw e;
@@ -251,6 +258,11 @@ module.exports = {
 
     } catch (err) {
       await client.query("ROLLBACK");
+
+      if (err?.status) {
+        throw err;
+      }
+
       const e = new Error("Erro interno do servidor ao processar remoção do carrinho.");
       e.status = 500;
       throw e;
