@@ -37,6 +37,7 @@ exports.listar = async (req, res) => {
     return res.status(200).json(itens);
 
   } catch (error) {
+    console.error(`[GET /carrinho/:id] Erro: ${error.message}`);
     return res.status(error.status || 500).json({ message: error.message });
   }
 };
