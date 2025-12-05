@@ -142,7 +142,7 @@ module.exports = {
       return result.rows;
 
     } catch (err) {
-      console.error("Erro ao listar carrinho:", err.message);
+      console.error(`[GET /carrinho/:id] Erro: ${error.message}`);
       const e = new Error("Erro interno do servidor ao buscar itens do carrinho.");
       e.status = 500;
       throw e;
