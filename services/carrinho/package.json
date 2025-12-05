@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest --runInBand"
+    "test": "npm run test:unit && npm run test:int",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:int": "jest tests/integration --runInBand"
   },
   "dependencies": {
     "axios": "^1.6.0",

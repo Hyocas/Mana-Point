@@ -1,11 +1,40 @@
 name: CI
 
 on:
+  push:
+    branches: ["v1.9"]
   pull_request:
     branches: ["main"]
 
 jobs:
-  usuarios-tests:
+  usuarios-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/usuarios/package-lock.json
+
+      - name: Install dependencies (usuarios)
+        run: |
+          cd services/usuarios
+          npm ci
+
+      - name: Run unit tests (usuarios)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+        run: |
+          cd services/usuarios
+          npm run test:unit
+
+  usuarios-integration-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -17,8 +46,6 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
-
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=5s
@@ -46,7 +73,7 @@ jobs:
           cd services/migrator
           npm install
 
-      - name: Run database migrations
+      - name: Run migrations
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
@@ -57,20 +84,47 @@ jobs:
           cd services/migrator
           node migrate.js
 
-      - name: Run tests
+      - name: Run integration tests (usuarios)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET}}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/usuarios
-          npm test
+          npm run test:int
 
-  catalogo-tests:
+  catalogo-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/catalogo/package-lock.json
+
+      - name: Install dependencies (catalogo)
+        run: |
+          cd services/catalogo
+          npm ci
+
+      - name: Run unit tests (catalogo)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+        run: |
+          cd services/catalogo
+          npm run test:unit
+
+  catalogo-integration-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -120,18 +174,47 @@ jobs:
           cd services/migrator
           node migrate.js
 
-      - name: Run tests
+      - name: Run integration tests (catalogo)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/catalogo
-          npm test
+          npm run test:int
 
-  carrinho-tests:
+  carrinho-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/carrinho/package-lock.json
+
+      - name: Install dependencies (carrinho)
+        run: |
+          cd services/carrinho
+          npm ci
+
+      - name: Run unit tests (carrinho)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
+        run: |
+          cd services/carrinho
+          npm run test:unit
+
+  carrinho-integration-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -181,15 +264,15 @@ jobs:
           cd services/migrator
           node migrate.js
 
-      - name: Run tests (Carrinho)
+      - name: Run integration tests (carrinho)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/carrinho
-          npm test
+          npm run test:int

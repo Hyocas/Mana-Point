@@ -1,0 +1,79 @@
+const request = require("supertest");
+const axios = require("axios");
+const app = require("../../src/app");
+const db = require("../../src/db");
+
+jest.mock("axios");
+
+describe("Logs do Carrinho (GET /api/carrinho)", () => {
+
+  let consoleSpy;
+  let errorSpy;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    await db.query("DELETE FROM carrinho_itens;");
+    await db.query("DELETE FROM cartas;");
+    await db.query("DELETE FROM usuarios;");
+
+    await db.query(`
+      INSERT INTO usuarios (id, email, senha_hash)
+      VALUES (1, 'teste@teste.com', '123')
+    `);
+
+    await db.query(`
+      INSERT INTO cartas (id, nome, preco, quantidade)
+      VALUES (1, 'Dark Magician', 20.00, 5),
+             (2, 'Blue-Eyes',      30.00, 8)
+    `);
+
+    await db.query(`
+      INSERT INTO carrinho_itens (usuario_id, produto_id, quantidade, preco_unitario)
+      VALUES 
+      (1, 1, 2, 20.00),
+      (1, 2, 1, 30.00)
+    `);
+  });
+
+  afterAll(async () => {
+    if (!db.pool.ended) {
+      await db.pool.end();
+    }
+  });
+
+  it("deve retornar itens do carrinho do fluxo normal", async () => {
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
+    });
+
+    const res = await request(app)
+      .get("/api/carrinho/1")
+      .set("Authorization", "Bearer tokenValido");
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(2);
+  });
+
+  it("deve logar erro no catch ao falhar no DB", async () => {
+    axios.post.mockResolvedValue({
+      data: { valido: true, usuario: { id: 1, cargo: "cliente" } }
+    });
+
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    jest.spyOn(db, "query").mockRejectedValue(new Error("ERRO REAL"));
+
+    const res = await request(app)
+      .get("/api/carrinho/1")
+      .set("Authorization", "Bearer tokenValido");
+
+    expect(res.status).toBe(500);
+    expect(errorSpy).toHaveBeenCalled();
+    expect(errorSpy.mock.calls[0][0]).toContain("[GET /carrinho/:id]");
+  });
+});

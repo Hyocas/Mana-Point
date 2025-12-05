@@ -5,13 +5,13 @@ jest.mock("axios", () => {
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
-    }
+    },
   };
 
   return {
     create: () => mockAxiosInstance,
     post: jest.fn(),
-    mockInstance: mockAxiosInstance
+    mockInstance: mockAxiosInstance,
   };
 });
 
@@ -21,6 +21,8 @@ const app = require("../../src/app");
 const db = require("../../src/db");
 
 describe("Integração – POST /api/cartas", () => {
+  const validToken = "tokenValido";
+  const invalidToken = "tokenInvalido";
 
   beforeEach(async () => {
     await db.query("DELETE FROM cartas;");
@@ -41,11 +43,11 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 401 se o token for inválido", async () => {
-    axios.post.mockRejectedValueOnce({ response: { status: 401 } });
+    axios.post.mockResolvedValue({ data: { valido: false } });
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer invalido")
+      .set("Authorization", `Bearer ${invalidToken}`)
       .send({ nome: "Teste" });
 
     expect(res.statusCode).toBe(401);
@@ -53,11 +55,11 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 400 se o nome não for enviado", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ data: { valido: true, usuario: { id: 1, cargo: "funcionario" } } });
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer valido")
+      .set("Authorization", `Bearer ${validToken}`)
       .send({ nome: "" });
 
     expect(res.statusCode).toBe(400);
@@ -65,7 +67,7 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 200 se a carta já existir no sistema", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ data: { valido: true, usuario: { id: 1, cargo: "funcionario" } } });
 
     await db.query(`
       INSERT INTO cartas (id, nome, tipo, quantidade, preco)
@@ -74,7 +76,7 @@ describe("Integração – POST /api/cartas", () => {
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer valido")
+      .set("Authorization", `Bearer ${validToken}`)
       .send({ nome: "Carta Existente" });
 
     expect(res.statusCode).toBe(200);
@@ -83,9 +85,9 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve criar carta via API corretamente (201)", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ data: { valido: true, usuario: { id: 1, cargo: "funcionario" } } });
 
-    axios.create().get.mockResolvedValue({
+    axios.mockInstance.get.mockResolvedValue({
       data: {
         data: [{
           id: 555,
@@ -102,7 +104,7 @@ describe("Integração – POST /api/cartas", () => {
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer tokenFake")
+      .set("Authorization", `Bearer ${validToken}`)
       .send({ nome: "Mock Create" });
 
     expect(res.statusCode).toBe(201);
@@ -112,13 +114,13 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 404 quando a carta não existir na API", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ data: { valido: true, usuario: { id: 1, cargo: "funcionario" } } });
 
-    axios.create().get.mockResolvedValue({ data: { data: [] } });
+    axios.mockInstance.get.mockResolvedValue({ data: { data: [] } });
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer tokenFake")
+      .set("Authorization", `Bearer ${validToken}`)
       .send({ nome: "CartaInexistente" });
 
     expect(res.statusCode).toBe(404);
@@ -126,12 +128,13 @@ describe("Integração – POST /api/cartas", () => {
   });
 
   it("deve retornar 500 em caso de erro inesperado ao cadastrar", async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ data: { valido: true, usuario: { id: 1, cargo: "funcionario" } } });
+
     jest.spyOn(db, "query").mockRejectedValueOnce(new Error("DB FAIL"));
 
     const res = await request(app)
       .post("/api/cartas")
-      .set("Authorization", "Bearer tokenFake")
+      .set("Authorization", `Bearer ${validToken}`)
       .send({ nome: "Falha" });
 
     expect(res.statusCode).toBe(500);
@@ -139,5 +142,4 @@ describe("Integração – POST /api/cartas", () => {
 
     db.query.mockRestore();
   });
-
 });
