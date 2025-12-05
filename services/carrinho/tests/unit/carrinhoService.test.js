@@ -82,8 +82,7 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve lançar 400 se o produto não existir no catálogo", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValue({});
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 });
 
       await expect(
         carrinhoService.adicionarItem(1, "cliente", 5, 1)
@@ -92,8 +91,7 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve lançar 400 se o estoque for insuficiente", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 0 }] })
-        .mockResolvedValue({});
+        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 0 }], rowCount: 1 });
 
       await expect(
         carrinhoService.adicionarItem(1, "cliente", 5, 1)
@@ -102,9 +100,9 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve inserir novo item quando não existe no carrinho", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 10 }] })
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [{ id: 123, quantidade: 1 }] });
+        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 10 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+        .mockResolvedValueOnce({ rows: [{ id: 123, quantidade: 1 }], rowCount: 1 });
 
       const result = await carrinhoService.adicionarItem(1, "cliente", 5, 1);
 
@@ -113,9 +111,9 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve atualizar item existente", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 10 }] })
-        .mockResolvedValueOnce({ rows: [{ id: 99, quantidade: 2 }] })
-        .mockResolvedValueOnce({ rows: [{ id: 99, quantidade: 4 }] });
+        .mockResolvedValueOnce({ rows: [{ preco: 10, quantidade: 10 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: 99, quantidade: 2 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: 99, quantidade: 4 }], rowCount: 1 });
 
       const result = await carrinhoService.adicionarItem(1, "cliente", 5, 2);
 
@@ -134,7 +132,8 @@ describe("CarrinhoService - Testes de Unidade", () => {
   describe("listarCarrinho()", () => {
     it("deve retornar lista do carrinho", async () => {
       db.query.mockResolvedValue({
-        rows: [{ id: 1 }, { id: 2 }]
+        rows: [{ id: 1 }, { id: 2 }],
+        rowCount: 2,
       });
 
       const result = await carrinhoService.listarCarrinho(1);
@@ -164,7 +163,8 @@ describe("CarrinhoService - Testes de Unidade", () => {
     });
 
     it("deve lançar 404 se item não encontrado", async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 });
 
       await expect(
         carrinhoService.atualizarItem(1, 10, 5)
@@ -173,8 +173,8 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve lançar 500 se produto inexistente", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 });
 
       await expect(
         carrinhoService.atualizarItem(1, 10, 5)
@@ -183,9 +183,9 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve atualizar item com sucesso", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }] })
-        .mockResolvedValueOnce({ rows: [{ quantidade: 10 }] })
-        .mockResolvedValueOnce({ rows: [{ id: 10, quantidade: 5 }] });
+        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ quantidade: 10 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: 10, quantidade: 5 }], rowCount: 1 });
 
       const result = await carrinhoService.atualizarItem(1, 10, 5);
       expect(result).toEqual({ id: 10, quantidade: 5 });
@@ -201,7 +201,8 @@ describe("CarrinhoService - Testes de Unidade", () => {
     });
 
     it("deve lançar 404 se item não existir", async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      mockClient.query
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 });
 
       await expect(
         carrinhoService.removerItem(1, 99)
@@ -210,8 +211,8 @@ describe("CarrinhoService - Testes de Unidade", () => {
 
     it("deve remover item com sucesso", async () => {
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }] })
-        .mockResolvedValueOnce();
+        .mockResolvedValueOnce({ rows: [{ produto_id: 5 }], rowCount: 1 })
+        .mockResolvedValueOnce({ rowCount: 1 });
 
       const result = await carrinhoService.removerItem(1, 5);
 
