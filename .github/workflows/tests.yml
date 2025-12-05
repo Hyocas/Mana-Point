@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   usuarios-unit-tests:
     runs-on: ubuntu-latest
@@ -26,13 +30,23 @@ jobs:
           cd services/usuarios
           npm ci
 
-      - name: Run unit tests (usuarios)
+      - name: Run unit tests with coverage (usuarios)
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/usuarios
-          npm run test:unit
+          # Adicionado flags para gerar cobertura e o relatorio json-summary
+          npm run test:unit -- --coverage --coverageReporters="text" --coverageReporters="json-summary"
+
+      - name: Jest Coverage Comment (Usuarios)
+        if: always()
+        uses: MishaKav/jest-coverage-comment@main
+        with:
+          coverage-summary-path: services/usuarios/coverage/coverage-summary.json
+          title: "Cobertura de Testes: Usuarios"
+          summary-title: "Usuarios"
+          create-new-comment: false
 
   usuarios-integration-tests:
     runs-on: ubuntu-latest
@@ -116,13 +130,23 @@ jobs:
           cd services/catalogo
           npm ci
 
-      - name: Run unit tests (catalogo)
+      - name: Run unit tests with coverage (catalogo)
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/catalogo
-          npm run test:unit
+          # Adicionado flags para gerar cobertura e o relatorio json-summary
+          npm run test:unit -- --coverage --coverageReporters="text" --coverageReporters="json-summary"
+
+      - name: Jest Coverage Comment (Catalogo)
+        if: always()
+        uses: MishaKav/jest-coverage-comment@main
+        with:
+          coverage-summary-path: services/catalogo/coverage/coverage-summary.json
+          title: "Cobertura de Testes: Catalogo"
+          summary-title: "Catalogo"
+          create-new-comment: false
 
   catalogo-integration-tests:
     runs-on: ubuntu-latest
@@ -206,13 +230,23 @@ jobs:
           cd services/carrinho
           npm ci
 
-      - name: Run unit tests (carrinho)
+      - name: Run unit tests with coverage (carrinho)
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           CHAVE_MESTRA_LOJA: ${{ secrets.CHAVE_MESTRA_LOJA }}
         run: |
           cd services/carrinho
-          npm run test:unit
+          # Adicionado flags para gerar cobertura e o relatorio json-summary
+          npm run test:unit -- --coverage --coverageReporters="text" --coverageReporters="json-summary"
+
+      - name: Jest Coverage Comment (Carrinho)
+        if: always()
+        uses: MishaKav/jest-coverage-comment@main
+        with:
+          coverage-summary-path: services/carrinho/coverage/coverage-summary.json
+          title: "Cobertura de Testes: Carrinho"
+          summary-title: "Carrinho"
+          create-new-comment: false
 
   carrinho-integration-tests:
     runs-on: ubuntu-latest
