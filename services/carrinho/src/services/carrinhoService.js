@@ -63,14 +63,15 @@ module.exports = {
         [produto_id]
       );
 
-      if (cartaResult.rows.length === 0) {
+      const cartaRows = cartaResult?.rows ?? [];
+      if (cartaRows.length === 0) {
         await client.query("ROLLBACK");
         const e = new Error("Produto não encontrado no catálogo.");
         e.status = 400;
         throw e;
       }
 
-      const carta = cartaResult.rows[0];
+      const carta = cartaRows[0];
       const estoqueAtual = carta.quantidade;
       const preco_unitario = carta.preco;
 
@@ -81,14 +82,16 @@ module.exports = {
         throw e;
       }
 
-      const itemExistente = await client.query(
+      const itemExistenteResult = await client.query(
         "SELECT id, quantidade FROM carrinho_itens WHERE usuario_id = $1 AND produto_id = $2",
         [usuarioId, produto_id]
       );
 
+      const itemRows = itemExistenteResult?.rows ?? [];
+
       let result;
-      if (itemExistente.rows.length > 0) {
-        const existingItem = itemExistente.rows[0];
+      if (itemRows.length > 0) {
+        const existingItem = itemRows[0];
         const novaQuantidade = existingItem.quantidade + quantidade;
 
         if (estoqueAtual < novaQuantidade) {
@@ -118,7 +121,7 @@ module.exports = {
       console.error("ERRO REAL:", err);
       await client.query("ROLLBACK");
 
-      if (err.code === "23505") {
+      if (err?.code === "23505") {
         const e = new Error("Este item já está sendo adicionado ao carrinho. Tente atualizar a quantidade.");
         e.status = 409;
         throw e;
@@ -142,7 +145,7 @@ module.exports = {
       return result.rows;
 
     } catch (err) {
-      console.error(`[GET /carrinho/:id] Erro: ${error.message}`);
+      console.error(`[GET /carrinho/:id] Erro: ${err.message}`);
       const e = new Error("Erro interno do servidor ao buscar itens do carrinho.");
       e.status = 500;
       throw e;
@@ -165,28 +168,32 @@ module.exports = {
         [itemId, usuarioId]
       );
 
-      if (itemResult.rows.length === 0) {
+      const itemRows = itemResult?.rows ?? [];
+
+      if (itemRows.length === 0) {
         await client.query("ROLLBACK");
         const e = new Error("Item do carrinho não encontrado ou não pertence a este usuário.");
         e.status = 404;
         throw e;
       }
 
-      const produtoId = itemResult.rows[0].produto_id;
+      const produtoId = itemRows[0].produto_id;
 
       const cartaResult = await client.query(
         "SELECT quantidade FROM cartas WHERE id = $1",
         [produtoId]
       );
 
-      if (cartaResult.rows.length === 0) {
+      const cartaRows = cartaResult?.rows ?? [];
+
+      if (cartaRows.length === 0) {
         await client.query("ROLLBACK");
         const e = new Error("Erro: Produto associado ao carrinho não encontrado no catálogo.");
         e.status = 500;
         throw e;
       }
 
-      const estoqueAtual = cartaResult.rows[0].quantidade;
+      const estoqueAtual = cartaRows[0].quantidade;
 
       if (novaQuantidade > estoqueAtual) {
         await client.query("ROLLBACK");
@@ -225,7 +232,9 @@ module.exports = {
         [itemId, usuarioId]
       );
 
-      if (itemResult.rows.length === 0) {
+      const rows = itemResult?.rows ?? [];
+
+      if (rows.length === 0) {
         await client.query("ROLLBACK");
         const e = new Error("Item do carrinho não encontrado ou não pertence a este usuário.");
         e.status = 404;
